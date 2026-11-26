@@ -1,32 +1,26 @@
-# Truy vết đường đi với Floyd–Warshall
+# Floyd–Warshall · Truy vết đường đi ngắn nhất
 
-[Mở bài học](https://kieran-lucas.github.io/floyd-warshall-path-reconstruction/) · [Phòng mô phỏng](https://kieran-lucas.github.io/floyd-warshall-path-reconstruction/laboratory.html)
+[Đọc bài và thử minh họa](https://kieran-lucas.github.io/floyd-warshall-path-reconstruction/)
 
-Bài học gồm năm trang, dùng cùng một đồ thị có hướng bốn đỉnh.
+Một bài đọc liên tục bằng tiếng Việt. Cùng đồ thị bốn đỉnh được dùng để trình bày Floyd cổ điển, ma trận bước kế tiếp N và ma trận trung gian M. Mỗi phần có mã Java và minh họa ngay trong bài. Nhấp nguồn rồi đích trên đồ thị để xem từng bước truy vết. Khi xây dựng ma trận, bỏ chọn **Chỉ xem bước cải thiện** để theo dõi cả 64 phép so sánh.
 
-1. [Từ một nguồn đến mọi cặp đỉnh](index.html) · Chạy Dijkstra từ nguồn 1 rồi xét câu hỏi khi nguồn đổi sang 2.
-2. [Ma trận khoảng cách D](khoang-cach.html) · Theo dõi các ma trận qua bốn lượt Floyd và phép cập nhật 9 → 8 → 5.
-3. [Ma trận bước kế tiếp N](buoc-ke-tiep.html) · Xem hoạt ảnh ghi và đọc ma trận, tiến lùi từng bước hoặc phát tự động.
-4. [Ma trận P và M](cac-cach-truy-vet.html) · Lần ngược, tách đoạn và xử lý trường hợp có nhiều đường cùng trọng số.
-5. [Cài đặt Java](cai-dat.html) · Mã nguồn đầy đủ, lệnh chạy và đầu ra để đối chiếu.
+Mở `index.html` trực tiếp hoặc phục vụ thư mục bằng máy chủ HTTP tĩnh.
 
-Phòng mô phỏng sáu đỉnh cho phép đổi nguồn và đích, xem tất cả các bước Floyd và liệt kê mọi đường ngắn nhất đơn.
+## Java
 
-## Chạy tại máy
-
-Mở `index.html` hoặc phục vụ thư mục bằng máy chủ HTTP tĩnh. Để chạy [ví dụ Java](FloydWarshallPaths.java), dùng JDK 11 trở lên.
+[Tải mã nguồn](FloydWarshallPaths.java), biên dịch rồi chạy với cặp đỉnh mong muốn.
 
 ```sh
 javac -encoding UTF-8 FloydWarshallPaths.java
 java FloydWarshallPaths 1 4
 ```
 
-## Kiểm thử thuật toán
+Ví dụ trả về khoảng cách 9 và đường [1, 2, 3, 4] cho cả hai phương án.
+
+## Kiểm thử
 
 ```sh
 node test-lesson.js
 node test-matrix-lab.js
 node test-all-paths.js
 ```
-
-Bài kiểm thử trang đọc xác nhận các liên kết, số liệu ma trận và mã Java hiển thị. Hai bộ kiểm thử thuật toán đối chiếu kết quả với liệt kê vét cạn. Bộ thứ nhất còn kiểm tra các điều khiển và sáu ma trận dựng sẵn của phòng mô phỏng.

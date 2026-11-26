@@ -1,65 +1,191 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Từ Dijkstra đến Floyd–Warshall. Xem từng lần ghi và đọc ma trận để dựng lại đường đi ngắn nhất.">
-  <title>Truy vết đường đi với Floyd–Warshall</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="lesson.css">
-  <script>
-    // Preserve bookmarks from the former single-page lesson.
-    const formerSections = {
-      '#simulation': 'buoc-ke-tiep.html#simulation', '#floyd': 'khoang-cach.html',
-      '#methods': 'cac-cach-truy-vet.html', '#comparison': 'cac-cach-truy-vet.html#comparison',
-      '#all-paths': 'cac-cach-truy-vet.html#all-paths', '#references': 'cai-dat.html#references'
-    };
-    if (Object.hasOwn(formerSections, location.hash)) location.replace(formerSections[location.hash]);
-  </script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floyd–Warshall: Mở rộng khả năng truy vết đường đi ngắn nhất</title>
+<meta name="description" content="Từ ma trận khoảng cách đến đường đi ngắn nhất. Theo dõi từng phép ghi, chọn hai đỉnh và so sánh hai cách truy vết Floyd–Warshall bằng Java.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lesson.css?v=linear1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=linear1"></script>
 </head>
-<body id="top">
-  <header class="mast"><div class="wrap mast-inner">
-    <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 28 26"><path d="M5 19 14 5l9 14H5"/><circle cx="5" cy="19" r="3.2"/><circle cx="14" cy="5" r="3.2"/><circle cx="23" cy="19" r="3.2"/></svg> DSA <span>/</span> Đồ thị</a>
-    <a class="lab-link" href="laboratory.html">Phòng mô phỏng <span aria-hidden="true">→</span></a>
-  </div></header>
-
-  <nav class="chapters wrap" aria-label="Mục lục bài học"><a href="index.html" aria-current="page"><span>1</span> Từ Dijkstra</a><a href="khoang-cach.html"><span>2</span> Ma trận D</a><a href="buoc-ke-tiep.html"><span>3</span> Bước kế tiếp N</a><a href="cac-cach-truy-vet.html"><span>4</span> Hai cách P và M</a><a href="cai-dat.html"><span>5</span> Code Java</a></nav>
-  <main class="wrap reader">
-    <header class="chapter-head"><p class="folio">Trang 1 / 5</p>
-      <h1>Truy vết đường đi với <em>Floyd–Warshall</em></h1>
-      <p class="standfirst">Dijkstra tìm đường ngắn nhất từ một nguồn trên đồ thị có trọng số không âm. Nếu hôm nay hỏi từ đỉnh 1, ngày mai lại hỏi từ đỉnh 2, ta nên tính và lưu những gì?</p>
-    </header>
-    
-<section class="reading" id="problem"><h2>Một lần Dijkstra trả lời những câu nào?</h2>
-<p>Xét đồ thị có hướng dưới đây. Số ghi cạnh mỗi mũi tên là chi phí đi theo chiều đó. Với nguồn 1, Dijkstra khởi đầu ở khoảng cách 0, rồi luôn chọn đỉnh chưa chốt có khoảng cách tạm thời nhỏ nhất. Khi chốt một đỉnh, ta thử đi qua nó để cải thiện khoảng cách tới từng đỉnh kề.</p>
-<div class="worked-pair"><figure class="network">
-          <figcaption>Đồ thị dùng trong cả bài</figcaption>
-          <svg class="route-graph" role="img" aria-labelledby="example-title" viewBox="0 0 370 202">
-            <title id="example-title">Các cạnh có hướng: 1 đến 2 giá 2, 1 đến 3 giá 6, 1 đến 4 giá 9, 2 đến 3 giá 1, 2 đến 4 giá 6, 3 đến 4 giá 2.</title>
+<body><main>
+<header><h1>Floyd–Warshall: Mở rộng khả năng truy vết đường đi ngắn nhất</h1></header>
+<section id="problem"><h2>1. Đặt vấn đề</h2>
+<p>Dijkstra là một cách quen thuộc để tìm đường ngắn nhất trên đồ thị có trọng số không âm. Chọn đỉnh 1 làm nguồn, ta tính được khoảng cách từ 1 đến các đỉnh còn lại. Nếu câu hỏi tiếp theo cũng xuất phát từ 1, ta chỉ việc tra lại kết quả. Nếu nguồn đổi sang 2, ta có thể phải chạy Dijkstra thêm một lần.</p>
+<p>Khi cần trả lời cho nhiều cặp nguồn và đích, Floyd–Warshall tính trước khoảng cách giữa mọi cặp đỉnh bằng quy hoạch động. Kết quả nằm trong ma trận <code>D</code>. Đọc một ô, ta biết đường ngắn nhất dài bao nhiêu. Muốn in cả đường đi, ta có thể ghi thêm một dấu vết ngay lúc cập nhật ô đó.</p>
+<p>Dấu vết ấy có thể là <strong>bước đầu tiên</strong> phải đi, hoặc là <strong>đỉnh trung gian</strong> nơi hai đoạn đường được ghép lại. Cả hai đều bắt đầu từ cùng một phép cập nhật của Floyd.</p></section>
+<section id="floyd"><h2>2. Floyd–Warshall cổ điển</h2>
+<p>Hàng <code>i</code> là đỉnh xuất phát, cột <code>j</code> là đỉnh đến. Ban đầu, <code>D[i][i] = 0</code>. Với hai đỉnh khác nhau, ta điền trọng số cạnh trực tiếp <span class="math">i → j</span> nếu cạnh đó tồn tại, và điền ∞ nếu chưa có cạnh nối. Đồ thị có hướng nên hai ô đối xứng qua đường chéo có thể khác nhau.</p>
+<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 370 202">
+            <title id="graph-title-initial">Đồ thị có hướng. Các cạnh 1 → 2, 1 → 3, 1 → 4, 2 → 3, 2 → 4 và 3 → 4 có trọng số lần lượt là 4, 15, 20, 3, 10 và 2.</title>
             <defs>
-              <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
-              <marker id="arrow-on" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
+              <marker id="arrow-initial" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
+              <marker id="arrow-on-initial" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
             </defs>
-            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">9</text></g>
-            <g data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">2</text></g>
-            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">6</text></g>
-            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">6</text></g>
+            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">20</text></g>
+            <g class="active" data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">4</text></g>
+            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">10</text></g>
+            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">15</text></g>
             <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
-            <g data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">1</text></g>
+            <g class="active" data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">3</text></g>
             <g data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
             <g data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
             <g data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
             <g data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
-          </svg>
-        </figure><div class="compare"><table><caption>Khoảng cách từ nguồn 1 sau mỗi lượt</caption><thead><tr><th scope="col">Đỉnh vừa chốt</th><th scope="col">Tới 1</th><th scope="col">Tới 2</th><th scope="col">Tới 3</th><th scope="col">Tới 4</th></tr></thead><tbody><tr><th scope="row">1</th><td>0</td><td>2</td><td>6</td><td>9</td></tr><tr><th scope="row">2</th><td>0</td><td>2</td><td><strong>3</strong></td><td><strong>8</strong></td></tr><tr><th scope="row">3</th><td>0</td><td>2</td><td>3</td><td><strong>5</strong></td></tr><tr><th scope="row">4</th><td>0</td><td>2</td><td>3</td><td>5</td></tr></tbody></table></div></div>
-<p>Chẳng hạn, sau khi chốt đỉnh 2, ta đi đến 3 với chi phí 2 + 1 = 3, rẻ hơn cạnh trực tiếp có trọng số 6. Khi chốt đỉnh 3, đường đến 4 giảm tiếp từ 8 xuống 5. Nếu chỉ hỏi cặp 1 → 4, có thể dừng khi đỉnh 4 được chốt.</p></section>
-<section class="reading"><h2>Điều gì thay đổi khi nguồn cũng thay đổi?</h2>
-<p>Hàng kết quả <code>[0, 2, 3, 5]</code> đủ để trả lời từ 1 đến bất kỳ đích nào. Bây giờ hãy hỏi từ <strong>2 đến 4</strong>. Chi phí là 3 vì ta đi 2 → 3 → 4. Muốn lấy kết quả này bằng Dijkstra, ta có thể chạy từ nguồn 2 và giữ thêm một hàng khoảng cách.</p>
-<p>Nếu chỉ có vài nguồn cần hỏi, cách đó rất tự nhiên. Khi cần bảng tra cho mọi cặp đỉnh, Floyd–Warshall cho ta toàn bộ ma trận trong một lần chạy. Hàng là nguồn, cột là đích. Trên đồ thị này, ô (1, 4) bằng 5 còn ô (4, 1) bằng ∞ vì không có cạnh nào đi ra từ 4.</p>
-<p class="takeaway"><strong>Câu hỏi còn lại</strong> &nbsp;Giả sử chương trình vừa trả về số 5. Phải lưu thêm thông tin gì trong lúc tính để sau đó in được <strong>1 → 2 → 3 → 4</strong>?</p></section>
-    <nav class="turn-page" aria-label="Chuyển trang"><span></span><a rel="next" href="khoang-cach.html">Ma trận D →</a></nav>
-  </main>
-</body>
-</html>
+          </svg></figure></div>
+<p>Sau lượt <code>k</code>, các đỉnh từ 1 đến k đều có thể xuất hiện ở giữa đường đi. Khi xét thêm k, ta so sánh đường đang biết với đường ghép từ hai đoạn <span class="math">i ⇝ k</span> và <span class="math">k ⇝ j</span>.</p>
+<pre class="formula"><code>D[i][j] = min(D[i][j], D[i][k] + D[k][j])</code></pre>
+<p>Hãy nhìn ô <code>D[1][3]</code>. Đi thẳng từ 1 tới 3 tốn 15. Ở lượt k = 2, đường <strong>1 → 2 → 3</strong> chỉ tốn <strong>4 + 3 = 7</strong>, nên Floyd thay 15 bằng 7. Sang lượt k = 3, thuật toán đã có thể dùng số 7 ấy để tính đường từ 1 tới 4. Ghép thêm cạnh 3 → 4 có trọng số 2, ta được chi phí 9.</p>
+<p>Ô <code>D[1][4]</code> giờ chứa số 9. Để in ra đường có chi phí 9 ấy, ta quay lại lúc Floyd chọn đi qua 3 và xem có thể ghi thêm điều gì.</p></section>
+<section id="next-hop"><h2>3. Ghi bước kế tiếp bằng ma trận N</h2>
+<h3>3.1. Từ một bước đi đến cả đường đi</h3>
+<p>Đứng ở đỉnh 1 và muốn tới đỉnh 4, ta chỉ cần biết nên đi sang đỉnh nào trước. Nếu câu trả lời là 2, ta đi sang 2 rồi hỏi tiếp cùng một câu với đích 4. Lặp lại cho tới khi chạm đích, các câu trả lời liên tiếp chính là đường cần in.</p>
+<p>Ma trận <strong>Next-Hop</strong> lưu những câu trả lời đó. <code>N[i][j]</code> là đỉnh ngay sau i trên một đường ngắn nhất đang biết từ i đến j. Khi đường qua k được chọn, bước đầu nằm trên đoạn i ⇝ k, do đó <code>N[i][j] = N[i][k]</code>.</p>
+<p>Trong ví dụ, khi ghép đường 1 ⇝ 3 với cạnh 3 → 4, đỉnh trung gian là 3 nhưng bước đầu trên đường 1 ⇝ 3 là 2. Bởi vậy ta ghi <strong>N[1][4] = N[1][3] = 2</strong>.</p>
+<h3 id="next-code">3.2. Khởi tạo, cập nhật và truy vết trong Java</h3>
+<p>Trong mã dưới đây, <code>d</code> là D, <code>next</code> là N và nhãn đỉnh bắt đầu từ 1. Với cạnh trực tiếp u → v, bước đầu là v. Ô trên đường chéo giữ chính nhãn đỉnh, còn −1 đánh dấu cặp chưa có đường.</p>
+<pre><code><span class="kw">int</span>[][] next = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
+<span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
+    <span class="kw">Arrays</span>.fill(next[i], -1);
+    next[i][i] = i;
+    <span class="kw">for</span> (<span class="kw">int</span> j = 1; j &lt;= n; j++) {
+        <span class="kw">if</span> (i != j &amp;&amp; d[i][j] != INF) next[i][j] = j;
+    }
+}</code></pre>
+<p>Đặt vòng lặp theo k ở ngoài cùng. Mỗi khi tổng của hai đoạn nhỏ hơn khoảng cách cũ, ta ghi cả chi phí mới lẫn bước đầu của đường mới.</p><pre><code><span class="kw">for</span> (<span class="kw">int</span> k = 1; k &lt;= n; k++) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
+        <span class="kw">if</span> (d[i][k] == INF) <span class="kw">continue</span>;
+        <span class="kw">for</span> (<span class="kw">int</span> j = 1; j &lt;= n; j++) {
+            <span class="kw">if</span> (d[k][j] == INF) <span class="kw">continue</span>;
+            <span class="kw">long</span> via = d[i][k] + d[k][j];
+            <span class="kw">if</span> (via &lt; d[i][j]) {
+                d[i][j] = via;
+                next[i][j] = next[i][k];
+            }
+        }
+    }
+}</code></pre>
+<p>Khi truy vết, giữ nguyên cột đích t và đổi hàng sau mỗi lần đọc. Với đích 4, các ô <code>N[1][4]</code>, <code>N[2][4]</code>, <code>N[3][4]</code> lần lượt trả về 2, 3, 4. Nếu từ s không tới được t, hàm trả về danh sách rỗng. Nếu s trùng t, danh sách chỉ chứa s. Trong tệp Java đầy đủ, <code>distance(s, t)</code> kiểm tra cả trường hợp chi phí giảm vô hạn do chu trình âm.</p><pre><code><span class="kw">public</span> <span class="kw">List</span>&lt;Integer&gt; nextPath(<span class="kw">int</span> s, <span class="kw">int</span> t) {
+    <span class="kw">if</span> (distance(s, t) == INF) <span class="kw">return</span> <span class="kw">List</span>.of();
+    <span class="kw">List</span>&lt;Integer&gt; path = <span class="kw">new</span> <span class="kw">ArrayList</span>&lt;&gt;();
+    path.add(s);
+    <span class="kw">while</span> (s != t) {
+        s = next[s][t];
+        path.add(s);
+    }
+    <span class="kw">return</span> path;
+}</code></pre>
+<h3 id="simulation">3.3. Theo dõi một bước ghi và một bước đọc</h3>
+<p>Nhấn <strong>Tiến</strong> để xem <code>D[1][3]</code> giảm từ 15 xuống 7 và <code>N[1][3]</code> đổi từ 3 sang 2. Sau đó nhấp lần lượt đỉnh 1 và đỉnh 4. Mỗi lần đọc một ô trong cột 4, một cạnh tương ứng sẽ được thêm vào đường đang dựng.</p>
+<div class="demo" data-method="N" id="demo-n">
+  <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
+    <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ xem bước cải thiện</label></div>
+  <div class="views"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D · Khoảng cách</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1">4</td><td data-cell="0,2">15</td><td data-cell="0,3">20</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2">3</td><td data-cell="1,3">10</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td></tr></tbody></table><table class="matrix" data-matrix="N"><caption>N · Bước kế tiếp</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">1</td><td data-cell="0,1">2</td><td data-cell="0,2">3</td><td data-cell="0,3">4</td></tr><tr><th scope="row">2</th><td data-cell="1,0">−1</td><td data-cell="1,1">2</td><td data-cell="1,2">3</td><td data-cell="1,3">4</td></tr><tr><th scope="row">3</th><td data-cell="2,0">−1</td><td data-cell="2,1">−1</td><td data-cell="2,2">3</td><td data-cell="2,3">4</td></tr><tr><th scope="row">4</th><td data-cell="3,0">−1</td><td data-cell="3,1">−1</td><td data-cell="3,2">−1</td><td data-cell="3,3">4</td></tr></tbody></table>
+    <div data-role="calls-box" class="calls" hidden><h4>Thứ tự gọi và ghép</h4><ol data-role="calls"></ol></div>
+  </div><div class="drawing"><figure class="graph-panel" style="--arrow:url(#arrow-N);--arrow-on:url(#arrow-on-N)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="group" aria-labelledby="graph-title-N" viewBox="0 0 370 202">
+            <title id="graph-title-N">Đồ thị có hướng. Các cạnh 1 → 2, 1 → 3, 1 → 4, 2 → 3, 2 → 4 và 3 → 4 có trọng số lần lượt là 4, 15, 20, 3, 10 và 2.</title>
+            <defs>
+              <marker id="arrow-N" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
+              <marker id="arrow-on-N" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
+            </defs>
+            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">20</text></g>
+            <g data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">4</text></g>
+            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">10</text></g>
+            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">15</text></g>
+            <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
+            <g data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">3</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
+          </svg></figure>
+    <p class="pick" data-role="pick">Nhấp một đỉnh làm nguồn, rồi nhấp đỉnh đích để truy vết.</p>
+    <p class="route" data-role="route"></p>
+  </div></div>
+  <p class="legend"><span class="read-key"></span>Ô đang đọc <span class="write-key"></span>Ô vừa ghi</p>
+  <div class="feedback"><p data-role="statement" aria-live="polite" aria-atomic="true">Trạng thái ban đầu.</p><p class="detail" data-role="detail"></p></div>
+  <div class="player"><button type="button" data-action="play">Phát</button><button type="button" data-action="prev" aria-label="Lùi một bước">← Lùi</button><button type="button" data-action="next" aria-label="Tiến một bước">Tiến →</button><button type="button" data-action="reset">Đặt lại</button>
+    <label>Tốc độ <select data-role="speed"><option value="2200">0,5×</option><option value="1100" selected>1×</option><option value="550">2×</option></select></label><span data-role="count"></span></div>
+  <noscript><p>Hãy bật JavaScript để chạy từng bước và chọn đỉnh trên đồ thị.</p></noscript>
+</div></section>
+<section id="intermediate"><h2>4. Ghi đỉnh trung gian bằng ma trận M</h2>
+<h3>4.1. Nhớ chỗ ghép hai đoạn đường</h3>
+<p>Cũng ở lần <code>D[1][4]</code> giảm xuống 9, ta có thể ghi lại chính đỉnh 3. Dấu này cho biết muốn dựng đường 1 ⇝ 4, hãy dựng đoạn 1 ⇝ 3 trước, rồi ghép với đoạn 3 ⇝ 4. Đến lượt đoạn 1 ⇝ 3, ta lại tìm được đỉnh 2 làm điểm chia.</p>
+<p>Đó là ý nghĩa của <strong>Intermediate Matrix</strong>. <code>M[i][j]</code> lưu đỉnh k ở lần cập nhật cuối làm giảm <code>D[i][j]</code>. Trên cùng một đường từ 1 tới 4, N lưu đỉnh 2 để ta bước tới, còn M lưu đỉnh 3 để ta tách đường thành hai phần.</p>
+<h3>4.2. Khởi tạo, cập nhật và truy vết đệ quy trong Java</h3>
+<p>Ban đầu các đường đã biết đều là cạnh trực tiếp hoặc đường từ một đỉnh tới chính nó. Mọi ô M vì thế được gán −1. Trong Java, ta đặt tên ma trận này là <code>mid</code>.</p><pre><code><span class="kw">int</span>[][] mid = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
+<span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
+    <span class="kw">Arrays</span>.fill(mid[i], -1);
+}</code></pre>
+<p>Ba vòng lặp tính khoảng cách vẫn như trước. Ở nhánh chấp nhận đường mới, phép gán cần thêm là <code>mid[i][j] = k</code>.</p><pre><code><span class="kw">long</span> via = d[i][k] + d[k][j];
+<span class="kw">if</span> (via &lt; d[i][j]) {
+    d[i][j] = via;
+    mid[i][j] = k;
+}</code></pre>
+<p>Để dựng một đường hữu hạn, đưa đỉnh nguồn vào danh sách một lần. Nếu i = j, đoạn đã hoàn tất. Nếu <code>mid[i][j] == -1</code> và i khác j, đoạn này là một cạnh trực tiếp, ta chỉ thêm j. Nếu ô chứa k, tiếp tục xử lý đoạn trái rồi đoạn phải. Chẳng hạn, sau khi đoạn 1 → 2 đã thêm đỉnh 2, đoạn 2 → 3 chỉ cần thêm đỉnh 3.</p><pre><code><span class="kw">public</span> <span class="kw">List</span>&lt;Integer&gt; midPath(<span class="kw">int</span> s, <span class="kw">int</span> t) {
+    <span class="kw">if</span> (distance(s, t) == INF) <span class="kw">return</span> <span class="kw">List</span>.of();
+    <span class="kw">List</span>&lt;Integer&gt; path = <span class="kw">new</span> <span class="kw">ArrayList</span>&lt;&gt;();
+    path.add(s);
+    appendSegment(s, t, path);
+    <span class="kw">return</span> path;
+}
+
+<span class="kw">private</span> <span class="kw">void</span> appendSegment(<span class="kw">int</span> i, <span class="kw">int</span> j, <span class="kw">List</span>&lt;Integer&gt; path) {
+    <span class="kw">if</span> (i == j) <span class="kw">return</span>;
+    <span class="kw">int</span> k = mid[i][j];
+    <span class="kw">if</span> (k == -1) {
+        path.add(j);
+        <span class="kw">return</span>;
+    }
+    appendSegment(i, k, path);
+    appendSegment(k, j, path);
+}</code></pre>
+<h3>4.3. Theo dõi các lần tách và ghép</h3>
+<p>Chọn lại cặp 1 → 4 trên đồ thị. Dưới hai ma trận là danh sách lời gọi theo thứ tự thực hiện. Khi tới đoạn 1 → 2, đường đi bắt đầu có cạnh đầu tiên. Những đoạn còn lại lần lượt bổ sung cạnh 2 → 3 và 3 → 4.</p>
+<div class="demo" data-method="M" id="demo-m">
+  <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
+    <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ xem bước cải thiện</label></div>
+  <div class="views"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D · Khoảng cách</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1">4</td><td data-cell="0,2">15</td><td data-cell="0,3">20</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2">3</td><td data-cell="1,3">10</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td></tr></tbody></table><table class="matrix" data-matrix="M"><caption>M · Đỉnh trung gian</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">−1</td><td data-cell="0,1">−1</td><td data-cell="0,2">−1</td><td data-cell="0,3">−1</td></tr><tr><th scope="row">2</th><td data-cell="1,0">−1</td><td data-cell="1,1">−1</td><td data-cell="1,2">−1</td><td data-cell="1,3">−1</td></tr><tr><th scope="row">3</th><td data-cell="2,0">−1</td><td data-cell="2,1">−1</td><td data-cell="2,2">−1</td><td data-cell="2,3">−1</td></tr><tr><th scope="row">4</th><td data-cell="3,0">−1</td><td data-cell="3,1">−1</td><td data-cell="3,2">−1</td><td data-cell="3,3">−1</td></tr></tbody></table>
+    <div data-role="calls-box" class="calls" hidden><h4>Thứ tự gọi và ghép</h4><ol data-role="calls"></ol></div>
+  </div><div class="drawing"><figure class="graph-panel" style="--arrow:url(#arrow-M);--arrow-on:url(#arrow-on-M)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="group" aria-labelledby="graph-title-M" viewBox="0 0 370 202">
+            <title id="graph-title-M">Đồ thị có hướng. Các cạnh 1 → 2, 1 → 3, 1 → 4, 2 → 3, 2 → 4 và 3 → 4 có trọng số lần lượt là 4, 15, 20, 3, 10 và 2.</title>
+            <defs>
+              <marker id="arrow-M" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
+              <marker id="arrow-on-M" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
+            </defs>
+            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">20</text></g>
+            <g data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">4</text></g>
+            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">10</text></g>
+            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">15</text></g>
+            <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
+            <g data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">3</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
+            <g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
+          </svg></figure>
+    <p class="pick" data-role="pick">Nhấp một đỉnh làm nguồn, rồi nhấp đỉnh đích để truy vết.</p>
+    <p class="route" data-role="route"></p>
+  </div></div>
+  <p class="legend"><span class="read-key"></span>Ô đang đọc <span class="write-key"></span>Ô vừa ghi</p>
+  <div class="feedback"><p data-role="statement" aria-live="polite" aria-atomic="true">Trạng thái ban đầu.</p><p class="detail" data-role="detail"></p></div>
+  <div class="player"><button type="button" data-action="play">Phát</button><button type="button" data-action="prev" aria-label="Lùi một bước">← Lùi</button><button type="button" data-action="next" aria-label="Tiến một bước">Tiến →</button><button type="button" data-action="reset">Đặt lại</button>
+    <label>Tốc độ <select data-role="speed"><option value="2200">0,5×</option><option value="1100" selected>1×</option><option value="550">2×</option></select></label><span data-role="count"></span></div>
+  <noscript><p>Hãy bật JavaScript để chạy từng bước và chọn đỉnh trên đồ thị.</p></noscript>
+</div></section>
+<section id="comparison"><h2>5. So sánh hai phương án</h2>
+<table class="compare"><thead><tr><th scope="col">Trên đường 1 → 4</th><th scope="col">Next-Hop N</th><th scope="col">Intermediate M</th></tr></thead>
+<tbody><tr><th scope="row">Ghi khi đi qua 3 tốt hơn</th><td>N[1][4] ← N[1][3] = 2</td><td>M[1][4] ← 3</td></tr>
+<tr><th scope="row">Đọc lại</th><td>Giữ đích 4, lần lượt đi qua 2, 3 rồi 4.</td><td>Tách tại 3, tách đoạn trái tại 2, rồi ghép ba cạnh.</td></tr>
+<tr><th scope="row">Cách viết hàm</th><td>Vòng lặp từ nguồn tới đích.</td><td>Đệ quy trên hai đoạn con.</td></tr></tbody></table>
+<p>Cả hai phương án đều thêm một phép gán mỗi khi Floyd tìm được đường ngắn hơn. Với V đỉnh, thời gian tính vẫn là <strong>O(V³)</strong> và ma trận phụ chiếm <strong>O(V²)</strong> bộ nhớ. Sau khi xác định cặp có khoảng cách hữu hạn, dựng một đường gồm L cạnh mất O(L + 1) với cả hai cách.</p>
+<p>Nếu có nhiều đường ngắn nhất cùng trọng số, điều kiện cập nhật <code>via &lt; d[i][j]</code> giữ lựa chọn đang có khi hai chi phí bằng nhau. Mỗi phương án trả về một đường. Chọn N khi muốn in từ đầu tới cuối bằng vòng lặp. M thuận tiện khi muốn thấy đường được ghép từ những đoạn nào.</p>
+<p id="code"><a href="FloydWarshallPaths.java" download>Tải mã Java đầy đủ cho cả hai phương án</a></p>
+<pre><code>javac -encoding UTF-8 FloydWarshallPaths.java
+java FloydWarshallPaths 1 4
+
+D[1][4] = 9
+N = [1, 2, 3, 4]
+M = [1, 2, 3, 4]</code></pre>
+</section>
+</main></body></html>

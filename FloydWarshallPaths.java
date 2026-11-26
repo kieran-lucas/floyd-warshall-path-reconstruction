@@ -1,22 +1,22 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public final class FloydWarshallPaths {
     private static final long INF = Long.MAX_VALUE / 2;
     private final int n;
     private final long[][] d;
-    private final int[][] next, pred, mid;
+    private final int[][] next, mid;
 
     public FloydWarshallPaths(int n, int[][] edges) {
         this.n = n;
         d = new long[n + 1][n + 1];
         next = new int[n + 1][n + 1];
-        pred = new int[n + 1][n + 1];
         mid = new int[n + 1][n + 1];
         for (int i = 1; i <= n; i++) {
             Arrays.fill(d[i], INF);
+            Arrays.fill(next[i], -1);
+            Arrays.fill(mid[i], -1);
             d[i][i] = 0;
             next[i][i] = i;
         }
@@ -25,7 +25,6 @@ public final class FloydWarshallPaths {
             if (w < d[u][v]) {
                 d[u][v] = w;
                 next[u][v] = v;
-                pred[u][v] = u;
             }
         }
         build();
@@ -39,10 +38,9 @@ public final class FloydWarshallPaths {
                     if (d[k][j] == INF) continue;
                     long via = d[i][k] + d[k][j];
                     if (via < d[i][j]) {
-                        // Bound repeated decreases caused by negative cycles.
+                        // Chặn tràn số khi một chu trình âm làm chi phí giảm liên tục.
                         d[i][j] = Math.max(-INF, via);
                         next[i][j] = next[i][k];
-                        pred[i][j] = pred[k][j];
                         mid[i][j] = k;
                     }
                 }
@@ -70,18 +68,6 @@ public final class FloydWarshallPaths {
         return path;
     }
 
-    public List<Integer> predPath(int s, int t) {
-        if (distance(s, t) == INF) return List.of();
-        List<Integer> path = new ArrayList<>();
-        path.add(t);
-        while (t != s) {
-            t = pred[s][t];
-            path.add(t);
-        }
-        Collections.reverse(path);
-        return path;
-    }
-
     public List<Integer> midPath(int s, int t) {
         if (distance(s, t) == INF) return List.of();
         List<Integer> path = new ArrayList<>();
@@ -93,7 +79,7 @@ public final class FloydWarshallPaths {
     private void appendSegment(int i, int j, List<Integer> path) {
         if (i == j) return;
         int k = mid[i][j];
-        if (k == 0) {
+        if (k == -1) {
             path.add(j);
             return;
         }
@@ -103,8 +89,8 @@ public final class FloydWarshallPaths {
 
     public static void main(String[] args) {
         int[][] edges = {
-            {1, 2, 2}, {1, 3, 6}, {1, 4, 9},
-            {2, 3, 1}, {2, 4, 6}, {3, 4, 2}
+            {1, 2, 4}, {1, 3, 15}, {1, 4, 20},
+            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}
         };
         int n = 4;
         if (args.length != 0 && args.length != 2) {
@@ -123,7 +109,6 @@ public final class FloydWarshallPaths {
         }
         System.out.printf("D[%d][%d] = %d%n", s, t, length);
         System.out.println("N = " + f.nextPath(s, t));
-        System.out.println("P = " + f.predPath(s, t));
         System.out.println("M = " + f.midPath(s, t));
     }
 }

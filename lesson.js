@@ -1,193 +1,248 @@
-/* The graph labels are the input for both the drawing and the Floyd snapshots. */
-(() => {
+/* Frames are derived from the same Floyd engine as the matrices. */
+(function () {
   'use strict';
+  const E = typeof module === 'object' ? require('./matrix-engine.js') : window.MatrixLabEngine;
+  const v = i => String(i + 1);
+  const pair = (i, j) => v(i) + ' → ' + v(j);
+  const cell = (key, i, j) => key + '[' + v(i) + '][' + v(j) + ']';
+  const val = (key, x) => key === 'D' ? E.fmt(x) : x < 0 ? '−1' : v(x);
 
-  const engine = window.MatrixLabEngine;
-  const byId = id => document.getElementById(id);
-  const edges = [...document.querySelectorAll('#graph [data-edge]')];
-  const nodes = [...document.querySelectorAll('#graph [data-node]')];
-  const model = engine.build(nodes.length, edges.map(edge => [
-    ...edge.dataset.edge.split(',').map(Number),
-    Number(edge.querySelector('text').textContent)
-  ]));
-  const s = 0, t = nodes.length - 1;
-  const name = { D: 'Khoảng cách', N: 'Bước kế tiếp', P: 'Đỉnh liền trước', M: 'Đỉnh trung gian' };
-  const fmt = (key, value) => key === 'D' ? engine.fmt(value) : engine.vertex(value);
-  const cell = (key, i, j) => key + '[' + engine.vertex(i) + '][' + engine.vertex(j) + ']';
-  const stages = [...document.querySelectorAll('[data-stage]')];
-  const matrix = byId('matrix');
-  const methods = byId('method');
-  const distance = model.final.D[s][t];
-  let frames = [], position = 0, timer = null;
-
-  function buildFrames(key) {
-    const initial = model.frames[0].state;
-    const direct = {
-      phase: 'build', key, state: initial, at: [s, t], route: [s, t],
-      headline: cell(key, s, t) + ' = ' + fmt(key, initial[key][s][t]),
-      note: 'Lúc khởi tạo, cạnh trực tiếp 1 → 4 có trọng số ' + initial.D[s][t] + '. ' + {
-        N: 'Bước đầu của cạnh này là đi thẳng sang 4.',
-        P: 'Trên cạnh này, đỉnh ngay trước 4 là 1.',
-        M: 'Đường trực tiếp chưa có đỉnh trung gian. Ta ghi dấu gạch ngang.'
-      }[key]
+  function buildFrames(model, key, changesOnly) {
+    const first = {
+      step: 0, state: model.frames[0].state, route: [],
+      title: 'Khởi tạo D và ' + key + '.',
+      detail: key === 'N' ? 'Với cạnh i → j, N[i][j] = j. Trên đường chéo, N[i][i] = i.' :
+        'Mọi ô M bằng −1. Các đường đã biết hiện chỉ gồm cạnh trực tiếp hoặc một đỉnh.'
     };
-    const changes = [direct];
-    for (const frame of model.frames) {
-      const ev = frame.event;
-      if (!ev || !ev.improved || ev.i !== s || ev.j !== t) continue;
-      const { k, left, right, old, candidate } = ev;
-      const previous = model.frames[frame.step - 1].state;
-      const leftPath = engine.path(model, s, k, 'N', previous).paths[0];
-      const rightPath = engine.path(model, k, t, 'N', previous).paths[0];
-      const via = engine.vertex(k);
-      const source = key === 'N' ? [s, k] : key === 'P' ? [k, t] : null;
-      const stored = fmt(key, frame.state[key][s][t]);
-      const rule = source ? cell(key, ...source) : via;
-      const prefix = key === 'N' ? 'Bước đầu của đoạn 1 → ' + via :
-        key === 'P' ? 'Đỉnh liền trước 4 trên đoạn ' + via + ' → 4' : 'Đỉnh chia đường';
-      changes.push({
-        phase: 'build', key, state: frame.state, at: [s, t], source, focus: [k],
-        route: leftPath.concat(rightPath.slice(1)),
-        headline: left + ' + ' + right + ' = ' + candidate + ' < ' + old,
-        note: 'Qua đỉnh ' + via + ', D[1][4] giảm từ ' + old + ' xuống ' + candidate +
-          '. ' + prefix + ' là ' + stored + '. Ghi ' + cell(key, s, t) + ' ← ' + rule +
-          (source ? ' = ' + stored : '') + '.'
+    const frames = [first];
+    for (const snapshot of model.frames.slice(1)) {
+      const { event, state, step } = snapshot;
+      const { i, j, k, candidate, left, right, old, improved } = event;
+      if (changesOnly && !improved) continue;
+      const reads = [['D', i, k], ['D', k, j]];
+      const writes = [];
+      let detail = 'Giữ ' + cell('D', i, j) + ' = ' + E.fmt(old) + '.';
+      if (improved) {
+        writes.push(['D', i, j], [key, i, j]);
+        if (key === 'N') reads.push(['N', i, k]);
+        detail = cell('D', i, j) + ' giảm từ ' + E.fmt(old) + ' xuống ' + E.fmt(candidate) + '. ' +
+          cell(key, i, j) + ' ← ' + (key === 'N' ? cell('N', i, k) + ' = ' : '') + val(key, state[key][i][j]) + '.';
+      }
+      let route = [];
+      if (Number.isFinite(candidate)) {
+        const previous = model.frames[step - 1].state;
+        const a = E.path(model, i, k, 'N', previous).paths[0];
+        const b = E.path(model, k, j, 'N', previous).paths[0];
+        route = a.concat(b.slice(1));
+      }
+      frames.push({
+        step, state, reads, writes, target: ['D', i, j], route, focus: k, endpoints: [i, j],
+        title: pair(i, j) + ' qua ' + v(k) + '   ·   ' + E.fmt(left) + ' + ' + E.fmt(right) +
+          (improved ? ' < ' : candidate === old ? ' = ' : ' > ') + E.fmt(old),
+        detail
       });
     }
-    return changes;
+    frames.push({
+      step: model.frames.length, state: model.final, route: [], title: 'Đã xét đủ ' + model.n + ' đỉnh trung gian.',
+      detail: 'Hai ma trận đã hoàn tất. Nhấp đỉnh nguồn rồi đỉnh đích để đọc ' + key + '.'
+    });
+    return frames;
   }
 
-  function traceFrames(key) {
-    const result = engine.path(model, s, t, key);
-    const steps = [];
+  function traceFrames(model, key, s, t) {
+    const result = E.path(model, s, t, key);
+    const d = E.fmt(result.distance);
+    const base = { state: model.final, endpoints: [s, t] };
+    if (result.status !== 'finite') return [{
+      ...base, route: [], reads: [['D', s, t]], title: cell('D', s, t) + ' = ' + d,
+      detail: result.status === 'unreachable' ? 'Không có đường đi từ ' + v(s) + ' đến ' + v(t) + '.' : 'Chi phí có thể giảm vô hạn qua chu trình âm.'
+    }];
+    const route = result.paths[0];
+    const final = {
+      ...base, route, focus: t, title: 'Đường đi: ' + E.routeText(route),
+      detail: 'Tổng trọng số ' + (route.length > 2 ?
+        route.slice(1).map((u, i) => model.W[route[i]][u]).join(' + ') + ' = ' : '') + d + '.'
+    };
+    if (s === t) return [{ ...final, reads: [['D', s, t]], detail: 'Nguồn trùng đích. Tổng trọng số 0.' }];
+    const frames = [{
+      ...base, route: [s], focus: s, reads: [['D', s, t]], title: cell('D', s, t) + ' = ' + d,
+      detail: key === 'N' ? 'Bắt đầu ở ' + v(s) + ', giữ nguyên cột đích ' + v(t) + '.' : 'Bắt đầu với đoạn ' + pair(s, t) + '.'
+    }];
+    let leafDepth = 0;
     for (const step of result.frames) {
-      // For M, each leaf lookup and its direct edge form a single visible step.
-      if (step.kind !== 'read' && step.kind !== 'split' && step.kind !== 'found') continue;
-      const route = step.route.slice();
-      const frame = { phase: 'trace', key, state: model.final, route };
-      if (step.kind === 'found') {
-        const weights = route.slice(1).map((v, i) => model.W[route[i]][v]);
-        frame.headline = engine.routeText(route);
-        frame.note = (key === 'P' ? 'Đảo thứ tự các đỉnh vừa đọc. ' : '') + 'Tổng trọng số các cạnh là ' + weights.join(' + ') + ' = ' + result.distance + ', đúng bằng D[1][4].';
-      } else {
+      if (step.kind === 'read') {
+        const [, i, j] = step.lookups[0], next = model.final.N[i][j];
+        frames.push({
+          ...base, route: step.route, focus: next, reads: step.lookups,
+          title: cell('N', i, j) + ' = ' + v(next),
+          detail: 'Thêm cạnh ' + pair(i, next) + ' vào đường đi.'
+        });
+      } else if (step.kind === 'split') {
+        const [, i, j] = step.lookups[0], k = model.final.M[i][j];
+        const split = k >= 0, segment = pair(i, j);
+        const call = 'Dựng (' + v(i) + ', ' + v(j) + ')';
+        leafDepth = step.depth;
+        frames.push({
+          ...base, route: step.route, endpoints: [i, j], focus: split ? k : null,
+          reads: step.lookups, title: cell('M', i, j) + ' = ' + val('M', k),
+          detail: split ? 'Tách tại đỉnh ' + v(k) + '. Dựng ' + pair(i, k) + ' trước rồi dựng ' + pair(k, j) + '.' :
+            'Đoạn ' + segment + ' là một cạnh trực tiếp.',
+          entry: { depth: step.depth, text: call + (split ? ' · tách tại ' + v(k) : ' · cạnh trực tiếp') }
+        });
+      } else if (step.kind === 'advance') {
         const [, i, j] = step.lookups[0];
-        const value = model.final[key][i][j];
-        const label = fmt(key, value);
-        frame.at = [i, j];
-        frame.headline = cell(key, i, j) + ' = ' + label;
-        if (key === 'N') {
-          frame.focus = [value];
-          frame.note = 'Giữ cột đích 4. Ở hàng ' + engine.vertex(i) + ', ô này chỉ sang đỉnh ' + label + '. Đường đã đi là ' + engine.routeText(route) + '.';
-        } else if (key === 'P') {
-          frame.focus = [value];
-          frame.note = 'Giữ hàng nguồn 1. Đỉnh ngay trước ' + engine.vertex(j) + ' là ' + label + '. Các đỉnh đọc được lần lượt là ' + [t, ...route.slice(0, -1).reverse()].map(engine.vertex).join(' → ') + '.';
-        } else if (value < 0) {
-          route.push(j);
-          frame.focus = [j];
-          frame.note = 'Đoạn ' + engine.routeText([i, j]) + ' là cạnh trực tiếp. Sau khi ghép, ta được ' + engine.routeText(route) + '.';
-        } else {
-          frame.focus = [value];
-          frame.note = 'Tách tại ' + label + '. Dựng đoạn ' + engine.routeText([i, value]) + ' trước, sau đó dựng đoạn ' + engine.routeText([value, j]) + '.';
+        frames.push({
+          ...base, route: step.route, focus: j, reads: [['M', i, j]],
+          title: 'Ghép cạnh ' + pair(i, j), detail: 'Thêm đỉnh ' + v(j) + ' vào cuối danh sách.',
+          entry: { depth: leafDepth + 1, text: 'Ghép ' + pair(i, j) }
+        });
+      }
+    }
+    frames.push(final);
+    return frames;
+  }
+
+  function mount(root, model) {
+    const key = root.dataset.method;
+    const role = name => root.querySelector('[data-role="' + name + '"]');
+    const action = name => root.querySelector('[data-action="' + name + '"]');
+    const phase = role('phase'), filter = role('filter'), speed = role('speed');
+    const play = action('play'), prev = action('prev'), next = action('next');
+    const matrices = [...root.querySelectorAll('[data-matrix]')].map(table => ({
+      key: table.dataset.matrix, cells: [...table.querySelectorAll('[data-cell]')].map(el => {
+        const [i, j] = el.dataset.cell.split(',').map(Number);
+        return { el, i, j };
+      })
+    }));
+    const nodes = [...root.querySelectorAll('[data-node]')], edges = [...root.querySelectorAll('[data-edge]')];
+    let frames = buildFrames(model, key, filter.checked), pos = 0, timer = null;
+    let source = null, target = null;
+
+    function stop() {
+      clearInterval(timer);
+      timer = null;
+      play.textContent = 'Phát';
+      play.setAttribute('aria-pressed', 'false');
+    }
+    function render() {
+      const building = phase.value === 'build';
+      const f = frames[pos] || { state: model.final, route: [], focus: source,
+        title: source === null ? 'Chọn đỉnh nguồn trên đồ thị.' : 'Nguồn ' + v(source) + ' đã chọn. Nhấp đỉnh đích.',
+        detail: 'Ma trận D và ' + key + ' đang hiển thị kết quả cuối của Floyd.' };
+      function isCell(a, matrix, i, j) { return a && a[0] === matrix && a[1] === i && a[2] === j; }
+      for (const { key: matrix, cells } of matrices) {
+        for (const { el, i, j } of cells) {
+          const value = val(matrix, f.state[matrix][i][j]);
+          if (el.textContent !== value) el.textContent = value;
+          const read = f.reads?.some(a => isCell(a, matrix, i, j));
+          const write = f.writes?.some(a => isCell(a, matrix, i, j));
+          el.className = write ? 'write' : read ? 'read' : isCell(f.target, matrix, i, j) ? 'target' : '';
+          el.title = cell(matrix, i, j) + ' = ' + value + (write ? ' · vừa ghi' : read ? ' · đang đọc' : '');
         }
       }
-      steps.push(frame);
-    }
-    return steps;
-  }
-
-  function makeLesson(key) {
-    return [{
-      phase: 'distance', key: 'D', state: model.final, at: [s, t], route: [],
-      headline: cell('D', s, t) + ' = ' + distance,
-      note: 'Ô ở hàng 1, cột 4 cho biết tổng trọng số nhỏ nhất là ' + distance + '. Từ đỉnh 1, ta phải đi sang đỉnh nào trước?'
-    }, ...buildFrames(key), ...traceFrames(key)];
-  }
-
-  function renderMatrix(frame) {
-    const { key, state, at, source, phase } = frame;
-    byId('matrix-caption').textContent = key + ' · ' + name[key];
-    byId('axis').textContent = phase === 'build'
-      ? (source ? 'Ô nét đứt được sao chép sang ô viền xanh lá.' : 'Ô viền xanh lá là ô được ghi.')
-      : 'Hàng là nguồn, cột là đích.';
-    const headers = matrix.tHead.rows[0].cells;
-    for (let j = 0; j < model.n; j++) headers[j + 1].classList.toggle('axis-on', at?.[1] === j);
-    for (let i = 0; i < model.n; i++) {
-      const cells = matrix.tBodies[0].rows[i].cells;
-      cells[0].classList.toggle('axis-on', at?.[0] === i);
-      for (let j = 0; j < model.n; j++) {
-        const el = cells[j + 1];
-        const value = fmt(key, state[key][i][j]);
-        el.textContent = value;
-        el.className = value === '∞' || value === '—' ? 'empty' : '';
-        if (source && source[0] === i && source[1] === j) el.classList.add('source-cell');
-        if (at && at[0] === i && at[1] === j) el.classList.add(phase === 'build' ? 'write' : 'read');
+      const routeEdges = f.route.slice(1).map((u, i) => f.route[i] + ',' + u);
+      for (const edge of edges) {
+        edge.classList.toggle('active', routeEdges.includes(edge.dataset.edge));
+        edge.classList.toggle('latest', !building && edge.dataset.edge === routeEdges.at(-1));
+      }
+      for (const node of nodes) {
+        const u = Number(node.dataset.node);
+        node.classList.toggle('visited', f.route.includes(u));
+        node.classList.toggle('endpoint', !!f.endpoints?.includes(u));
+        node.classList.toggle('focus', u === f.focus);
+      }
+      role('filter-label').hidden = !building;
+      role('pick').textContent = !building && source !== null && target === null ? 'Nguồn ' + v(source) + ' · Nhấp đỉnh đích (có thể chọn lại ' + v(source) + ').' :
+        'Nhấp một đỉnh làm nguồn, rồi nhấp đỉnh đích để truy vết.';
+      role('route').textContent = !building && f.route.length ? 'Đường đang dựng   ' + E.routeText(f.route) : '';
+      role('statement').textContent = f.title;
+      role('detail').textContent = f.detail;
+      role('count').textContent = frames.length ? 'Bước ' + (pos + 1) + ' / ' + frames.length : '';
+      prev.disabled = pos === 0;
+      next.disabled = pos >= frames.length - 1;
+      play.disabled = frames.length < 2;
+      const showLog = !building && key === 'M' && frames.length > 0;
+      role('calls-box').hidden = !showLog;
+      if (showLog) {
+        const entries = frames.slice(0, pos + 1).map(frame => frame.entry).filter(Boolean);
+        const list = role('calls');
+        list.replaceChildren();
+        for (const entry of entries) {
+          const li = document.createElement('li');
+          li.style.marginInlineStart = entry.depth + 'em';
+          li.textContent = entry.text;
+          list.append(li);
+        }
+        role('calls-box').hidden = !entries.length;
       }
     }
-  }
-
-  function render() {
-    const frame = frames[position], last = position === frames.length - 1;
-    const routeEdges = new Set(frame.route.slice(1).map((v, i) => frame.route[i] + ',' + v));
-    const visited = new Set(frame.route);
-    for (const el of edges) el.classList.toggle('active', routeEdges.has(el.dataset.edge));
-    for (const [i, el] of nodes.entries()) {
-      el.classList.toggle('visited', visited.has(i));
-      el.classList.toggle('focus', !!frame.focus?.includes(i));
+    function advance(delta) {
+      pos = Math.max(0, Math.min(pos + delta, frames.length - 1));
+      render();
+      if (pos === frames.length - 1) stop();
     }
-    renderMatrix(frame);
-    byId('graph-title').textContent = frame.route.length > 1
-      ? 'Đường đang tô trên đồ thị là ' + engine.routeText(frame.route) + '.' : 'Đồ thị có hướng từ đỉnh 1 đến đỉnh 4.';
-    byId('headline').textContent = frame.headline;
-    byId('explain').textContent = frame.note;
-    byId('progress').textContent = 'Bước ' + (position + 1) + ' / ' + frames.length;
-    for (const button of stages) {
-      button.disabled = false;
-      button.setAttribute('aria-pressed', String(button.dataset.stage === frame.phase));
+    function start() {
+      stop();
+      if (frames.length < 2) return;
+      if (pos === frames.length - 1) pos = 0;
+      render();
+      play.textContent = 'Tạm dừng';
+      play.setAttribute('aria-pressed', 'true');
+      timer = setInterval(() => advance(1), Number(speed.value));
     }
-    byId('prev').disabled = position === 0;
-    byId('next').textContent = last ? 'Xem lại ↺' : 'Bước tiếp →';
-  }
-
-  function stop() {
-    window.clearInterval(timer);
-    timer = null;
-    byId('play').firstElementChild.textContent = '▶';
-    byId('play-label').textContent = 'Tự chạy';
-  }
-
-  function go(index) {
-    stop();
-    position = index;
+    function reset() {
+      stop();
+      source = target = null;
+      pos = 0;
+      frames = phase.value === 'build' ? buildFrames(model, key, filter.checked) : [];
+      render();
+    }
+    function choose(u) {
+      stop();
+      phase.value = 'trace';
+      pos = 0;
+      if (source === null || target !== null) {
+        source = u; target = null; frames = [];
+        render();
+      } else {
+        target = u;
+        frames = traceFrames(model, key, source, target);
+        render();
+        if (frames.length > 1) start();
+      }
+    }
+    for (const node of nodes) {
+      node.addEventListener('click', () => choose(Number(node.dataset.node)));
+      node.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!e.repeat) choose(Number(node.dataset.node));
+        }
+      });
+    }
+    phase.addEventListener('change', reset);
+    filter.addEventListener('change', () => {
+      stop();
+      const step = frames[pos].step;
+      frames = buildFrames(model, key, filter.checked);
+      pos = frames.findIndex(f => f.step >= step);
+      render();
+    });
+    speed.addEventListener('change', () => { if (timer !== null) start(); });
+    play.addEventListener('click', () => { if (timer === null) start(); else stop(); });
+    prev.addEventListener('click', () => { stop(); advance(-1); });
+    next.addEventListener('click', () => { stop(); advance(1); });
+    action('reset').addEventListener('click', reset);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
     render();
   }
-
-  methods.addEventListener('change', () => {
-    const phase = frames[position].phase;
-    frames = makeLesson(methods.value);
-    go(frames.findIndex(f => f.phase === (phase === 'trace' ? 'trace' : 'build')));
-  });
-  for (const button of stages) {
-    button.addEventListener('click', () => go(frames.findIndex(f => f.phase === button.dataset.stage)));
+  if (typeof module === 'object' && module.exports) {
+    module.exports = { buildFrames, traceFrames, mount };
+  } else {
+    const graph = document.querySelector('.initial .route-graph');
+    const edges = [...graph.querySelectorAll('[data-edge]')].map(el =>
+      [...el.dataset.edge.split(',').map(Number), Number(el.querySelector('text').textContent)]);
+    const model = E.build(graph.querySelectorAll('[data-node]').length, edges);
+    document.querySelectorAll('.demo').forEach(root => mount(root, model));
   }
-  byId('prev').addEventListener('click', () => go(Math.max(0, position - 1)));
-  byId('next').addEventListener('click', () => go((position + 1) % frames.length));
-  byId('play').addEventListener('click', () => {
-    if (timer !== null) { stop(); return; }
-    if (position === frames.length - 1) go(0);
-    byId('play').firstElementChild.textContent = 'Ⅱ';
-    byId('play-label').textContent = 'Tạm dừng';
-    timer = window.setInterval(() => {
-      position++;
-      render();
-      if (position === frames.length - 1) stop();
-    }, 3200);
-  });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
-
-  const requested = new URLSearchParams(window.location.search).get('method');
-  if (['N', 'P', 'M'].includes(requested)) methods.value = requested;
-  frames = makeLesson(methods.value);
-  if (requested === methods.value) position = frames.findIndex(frame => frame.phase === 'trace');
-  render();
-  for (const control of [methods, byId('next'), byId('play')]) control.disabled = false;
 })();
