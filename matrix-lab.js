@@ -22,7 +22,7 @@
  const styles={'0,1':{l:[106,83]},'0,2':{q:[150,-55],l:[157,19]},'0,5':{q:[326,420],l:[334,287]},'1,2':{l:[241,34]},'2,1':{q:[243,125],l:[241,91]},'1,3':{l:[220,148]},'2,3':{l:[328,141]},'2,4':{l:[402,120]},'3,4':{l:[388,249]},'3,5':{q:[500,105],l:[488,145]},'4,5':{l:[540,207]}};
  function graph(route=[],focus=[],mid=-1,candidate=null,tight=false){
   const keys=new Set(route.slice(1).map((v,i)=>route[i]+','+v)),high=new Set([...route,...focus]);
-  let svg='<defs><marker id="mlArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L8 4L0 8z" fill="#a8b1bf"/></marker><marker id="mlBlue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="#315bc3"/></marker><marker id="mlOrange" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="#a65a12"/></marker></defs>';
+  let svg='<defs><marker id="mlArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L8 4L0 8z" fill="#97a9bc"/></marker><marker id="mlBlue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="#174e86"/></marker><marker id="mlOrange" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="#b35329"/></marker></defs>';
   for(const [u,v,w] of model.edges){
    const a=xy[u],b=xy[v],g=styles[u+','+v]||{l:[(a[0]+b[0])/2,(a[1]+b[1])/2-10]},q=g.q||b,z=g.q||a;
    const d1=Math.hypot(q[0]-a[0],q[1]-a[1]),d2=Math.hypot(z[0]-b[0],z[1]-b[1]);
@@ -101,7 +101,7 @@
   $('mlExtraWrap').hidden=!showAll;$('mlExtraMatrices').innerHTML=showAll?extra.map(k=>matrix(k,data[k],lookup,refs,previous,ev)).join(''):'';
   $('mlCrossCheck').hidden=mode!=='trace';
   if(mode==='trace'){const methods=['P','N','M','H','T'],checks=methods.map(k=>E.path(model,s,t,k));const sig=x=>x.paths.map(p=>p.join(',')).sort().join('|');const ok=sig(checks[3])===sig(checks[4])&&checks.every(x=>x.distance===result.distance);$('mlCrossCheck').innerHTML='<h3>Đối chiếu cả 5 phương án</h3><p>'+(ok?'✓ Cả năm phương án thống nhất về khoảng cách; H và T cho cùng tập đường đi.':'Kết quả không nhất quán.')+'</p><div class="mlCrossGrid">'+methods.map((k,i)=>'<div><small>'+k+' · '+names[k]+'</small><strong>'+checks[i].paths.length+'</strong><span>'+ (i<3?(checks[i].paths[0]?routeText(checks[i].paths[0]):'—'):'đường ngắn nhất đơn')+'</span></div>').join('')+'</div>';}
-  $('mlMatrixHelp').textContent=mode==='build'?'Xanh đậm: ô đang xét · xanh nhạt: ô tham chiếu · viền vàng: giá trị vừa đổi.':'Bấm một ô bất kỳ để truy vấn i → j; ô xanh đậm là cặp nguồn–đích, viền xanh là ô đang đọc.';
+  $('mlMatrixHelp').textContent=mode==='build'?'Xanh dương: ô đang xét · tím: ô tham chiếu · xanh lá: ô vừa đổi.':'Bấm một ô bất kỳ để truy vấn i → j. Xanh dương: ô nguồn–đích hoặc ô đang đọc.';
   $('mlMethodHint').textContent=defs[method];
  }
  $('mlDataset').onchange=resetDataset;
