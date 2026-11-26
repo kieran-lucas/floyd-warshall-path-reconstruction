@@ -177,3 +177,14 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .calls ol { overflow-wrap: anywhere; }
 @media(max-width:650px) { .timeline { padding: 0 8px 8px; } .legend { gap: 5px; } .target-key { margin-left: 4px; } }
 @media print { .timeline { display: none; } }
+
+/* A copy action anchored to each code block, not its scrolling content. */
+.copy-block { position: relative; margin: 8px 0 18px; min-width: 0; }
+.copy-block > pre { margin: 0; padding-top: 37px; }
+.copy-code { position: absolute; top: 7px; right: 8px; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 3px 8px; min-height: 25px; border: 1px solid #d6dee8; border-radius: 4px; background: #fff; color: var(--muted); font: 500 11px/1.4 var(--sans); cursor: pointer; }
+.copy-code:hover { color: var(--blue); border-color: var(--blue-border); background: #f8fbff; }
+.copy-code[data-state="copied"] { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+.copy-code[data-state="failed"] { color: #a33e35; }
+.copy-code svg { flex: none; }
+@media (pointer: coarse) { .copy-code { min-height: 32px; } .copy-block > pre { padding-top: 45px; } }
+@media print { .copy-code { display: none; } .copy-block > pre { padding-top: 12px; } }

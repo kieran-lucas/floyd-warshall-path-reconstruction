@@ -26,4 +26,5 @@ Ví dụ trả về khoảng cách 14 và đường [1, 2, 3, 4, 5, 6] cho cả 
 node test-lesson.js
 node test-matrix-lab.js
 node test-all-paths.js
+node -e "require('./test-copy-code.js')()"
 ```
