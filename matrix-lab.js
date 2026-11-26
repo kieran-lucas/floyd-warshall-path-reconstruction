@@ -58,7 +58,7 @@
  function render(){
   $('mlDataset').value=dataset;$('mlSource').value=s;$('mlTarget').value=t;$('mlFilter').checked=filter;$('mlAll').checked=showAll;
   $('mlBuild').setAttribute('aria-pressed',String(mode==='build'));$('mlTrace').setAttribute('aria-pressed',String(mode==='trace'));
-  $('mlFilterWrap').hidden=mode!=='build';$('mlQueryControls').hidden=mode!=='trace';
+  $('mlFilterWrap').hidden=mode!=='build';$('mlNextTie').disabled=!frames.some(f=>f.event?.tied);$('mlQueryControls').hidden=mode!=='trace';
   $('mlSummary').hidden=mode!=='trace';$('mlResults').hidden=mode!=='trace';
   $('mlStep').textContent=pos()+' / '+max();$('mlRange').max=max();$('mlRange').value=pos();
   $('mlPrev').disabled=pos()===0;$('mlNext').disabled=pos()===max();
@@ -95,9 +95,12 @@
    $('mlList').innerHTML=result.paths.map((r,i)=>'<button class="mlRoute '+(selected===i?'chosen':'')+'" data-route="'+i+'" aria-pressed="'+(selected===i)+'"><span class="mlRouteNo">'+String(i+1).padStart(2,'0')+'</span><strong>'+routeText(r)+'</strong><span class="mlRouteCost">'+fmt(result.distance)+'</span><small>'+(i<f.found?'Đã tìm':'Tham chiếu')+'</small></button>').join('')||'<p>Không tồn tại đường đi hữu hạn.</p>';
   }
   const primary=method==='T'?'W':method;
-  const order=showAll?['D',primary,...['W','P','N','M','H'].filter(k=>k!==primary)]:['D',primary];
+  const order=['D',primary],extra=['W','P','N','M','H'].filter(k=>k!==primary);
   const data={...state,W:model.W};
   $('mlMatrices').innerHTML=order.map(k=>matrix(k,data[k],lookup,refs,previous,ev)).join('');
+  $('mlExtraWrap').hidden=!showAll;$('mlExtraMatrices').innerHTML=showAll?extra.map(k=>matrix(k,data[k],lookup,refs,previous,ev)).join(''):'';
+  $('mlCrossCheck').hidden=mode!=='trace';
+  if(mode==='trace'){const methods=['P','N','M','H','T'],checks=methods.map(k=>E.path(model,s,t,k));const sig=x=>x.paths.map(p=>p.join(',')).sort().join('|');const ok=sig(checks[3])===sig(checks[4])&&checks.every(x=>x.distance===result.distance);$('mlCrossCheck').innerHTML='<h3>Đối chiếu cả 5 phương án</h3><p>'+(ok?'✓ Cả năm phương án thống nhất về khoảng cách; H và T cho cùng tập đường đi.':'Kết quả không nhất quán.')+'</p><div class="mlCrossGrid">'+methods.map((k,i)=>'<div><small>'+k+' · '+names[k]+'</small><strong>'+checks[i].paths.length+'</strong><span>'+ (i<3?(checks[i].paths[0]?routeText(checks[i].paths[0]):'—'):'đường ngắn nhất đơn')+'</span></div>').join('')+'</div>';}
   $('mlMatrixHelp').textContent=mode==='build'?'Xanh đậm: ô đang xét · xanh nhạt: ô tham chiếu · viền vàng: giá trị vừa đổi.':'Bấm một ô bất kỳ để truy vấn i → j; ô xanh đậm là cặp nguồn–đích, viền xanh là ô đang đọc.';
   $('mlMethodHint').textContent=defs[method];
  }
@@ -110,7 +113,8 @@
  $('mlFirst').onclick=()=>{stop();setPosition(0);};$('mlPrev').onclick=()=>{stop();setPosition(pos()-1);};$('mlNext').onclick=()=>{stop();setPosition(pos()+1);};$('mlLast').onclick=()=>{stop();setPosition(max());};
  $('mlPlay').onclick=play;$('mlSpeed').onchange=()=>{if(timer!==null){stop();play();}};
  $('mlRange').oninput=()=>{stop();setPosition(num($('mlRange').value));};
- $('mlMatrices').onclick=e=>{const b=e.target.closest('[data-cell]');if(!b||mode!=='trace')return;const [k,u,v]=b.dataset.cell.split(',');query(num(u),num(v),['P','N','M','H'].includes(k)?k:method);};
+ const matrixClick=e=>{const b=e.target.closest('[data-cell]');if(!b||mode!=='trace')return;const [k,u,v]=b.dataset.cell.split(',');query(num(u),num(v),['P','N','M','H'].includes(k)?k:method);};$('mlMatrices').onclick=matrixClick;$('mlExtraMatrices').onclick=matrixClick;
+ $('mlNextTie').onclick=()=>{stop();const next=frames.findIndex((f,i)=>i>buildPos&&f.event?.tied);if(next>=0)setPosition(next);else{const first=frames.findIndex(f=>f.event?.tied);if(first>=0)setPosition(first);}};
  $('mlList').onclick=e=>{const b=e.target.closest('[data-route]');if(!b)return;stop();selected=num(b.dataset.route);tracePos=max();render();};
  changeFilter();recalc(true);render();
  return {getState:()=>({dataset,mode,method,s,t,buildPos,tracePos,showAll,filter,selected,result,model}),render};
