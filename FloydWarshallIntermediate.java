@@ -2,29 +2,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class FloydWarshallPaths {
+public final class FloydWarshallIntermediate {
     private static final long INF = Long.MAX_VALUE / 2;
     private final int n;
     private final long[][] d;
-    private final int[][] next, mid;
+    private final int[][] mid;
 
-    public FloydWarshallPaths(int n, int[][] edges) {
+    public FloydWarshallIntermediate(int n, int[][] edges) {
         this.n = n;
         d = new long[n + 1][n + 1];
-        next = new int[n + 1][n + 1];
         mid = new int[n + 1][n + 1];
         for (int i = 1; i <= n; i++) {
             Arrays.fill(d[i], INF);
-            Arrays.fill(next[i], -1);
             Arrays.fill(mid[i], -1);
             d[i][i] = 0;
-            next[i][i] = i;
         }
         for (int[] edge : edges) {
             int u = edge[0], v = edge[1], w = edge[2];
             if (w < d[u][v]) {
                 d[u][v] = w;
-                next[u][v] = v;
             }
         }
         build();
@@ -40,7 +36,6 @@ public final class FloydWarshallPaths {
                     if (via < d[i][j]) {
                         // Chặn tràn số khi một chu trình âm làm chi phí giảm liên tục.
                         d[i][j] = Math.max(-INF, via);
-                        next[i][j] = next[i][k];
                         mid[i][j] = k;
                     }
                 }
@@ -55,17 +50,6 @@ public final class FloydWarshallPaths {
             }
         }
         return d[s][t];
-    }
-
-    public List<Integer> nextPath(int s, int t) {
-        if (distance(s, t) == INF) return List.of();
-        List<Integer> path = new ArrayList<>();
-        path.add(s);
-        while (s != t) {
-            s = next[s][t];
-            path.add(s);
-        }
-        return path;
     }
 
     public List<Integer> midPath(int s, int t) {
@@ -101,14 +85,13 @@ public final class FloydWarshallPaths {
         if (s < 1 || s > n || t < 1 || t > n) {
             throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
         }
-        FloydWarshallPaths f = new FloydWarshallPaths(n, edges);
+        FloydWarshallIntermediate f = new FloydWarshallIntermediate(n, edges);
         long length = f.distance(s, t);
         if (length == INF) {
             System.out.printf("Không có đường từ %d tới %d.%n", s, t);
             return;
         }
         System.out.printf("D[%d][%d] = %d%n", s, t, length);
-        System.out.println("N = " + f.nextPath(s, t));
         System.out.println("M = " + f.midPath(s, t));
     }
 }

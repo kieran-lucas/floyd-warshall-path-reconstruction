@@ -150,3 +150,8 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .compare-result strong { font: 600 12px/1.6 var(--mono); color: var(--blue); }
 @media(max-width: 600px) { .trace-compare { grid-template-columns: 1fr; } .trace-compare figure + figure { border-left: 0; border-top: 1px solid var(--line); } .trace-compare figure { padding: 10px; } .state-compare th:not(:first-child) { font: 10px/1.35 var(--mono); } }
 @media print { .trace-compare { break-inside: avoid; } }
+
+/* Complete, independent Java programs inside their own method sections. */
+.full-source { margin: 20px 0 26px; }
+.full-source h4 { font: 600 15px/1.5 var(--sans); margin: 0 0 8px; }
+.source-download { color: var(--blue); text-underline-offset: 2px; }

@@ -8,11 +8,14 @@ Mở `index.html` trực tiếp hoặc phục vụ thư mục bằng máy chủ 
 
 ## Java
 
-[Tải mã nguồn](FloydWarshallPaths.java), biên dịch rồi chạy với cặp đỉnh mong muốn.
+Hai chương trình độc lập được đặt ngay trong phần tương ứng của bài: [Next-Hop](FloydWarshallNextHop.java) và [Intermediate](FloydWarshallIntermediate.java).
 
 ```sh
-javac -encoding UTF-8 FloydWarshallPaths.java
-java FloydWarshallPaths 1 4
+javac -encoding UTF-8 FloydWarshallNextHop.java
+java FloydWarshallNextHop 1 4
+
+javac -encoding UTF-8 FloydWarshallIntermediate.java
+java FloydWarshallIntermediate 1 4
 ```
 
 Ví dụ trả về khoảng cách 9 và đường [1, 2, 3, 4] cho cả hai phương án.

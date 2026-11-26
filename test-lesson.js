@@ -6,11 +6,25 @@ const engine = require('./matrix-engine.js');
 const { buildFrames, traceFrames } = require('./lesson.js');
 const read = file => fs.readFileSync(path.join(__dirname, file), 'utf8');
 const html = read('index.html');
-const java = read('FloydWarshallPaths.java');
-const listing = html.match(/<code id="java-source">([\s\S]*?)<\/code>/);
-assert.ok(listing, 'The complete Java program is printed in the article.');
-const escapedJava = java.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-assert.equal(listing[1], escapedJava);
+const javaN = read('FloydWarshallNextHop.java');
+const javaM = read('FloydWarshallIntermediate.java');
+for (const [key, source, name, method] of [
+  ['n', javaN, 'FloydWarshallNextHop', 'next-hop'],
+  ['m', javaM, 'FloydWarshallIntermediate', 'intermediate']
+]) {
+  const listing = html.match(new RegExp('<code id="java-' + key + '-source">([\\s\\S]*?)<\\/code>'));
+  assert.ok(listing, name + ' must appear in the article.');
+  const escaped = source.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  assert.equal(listing[1], escaped);
+  assert.ok(source.includes('public final class ' + name));
+  assert.ok(html.includes('href="' + name + '.java"'));
+  const start = html.indexOf('<div id="' + method + '">');
+  const end = html.indexOf(key === 'n' ? '<div id="intermediate">' : '<section id="comparison">');
+  assert.ok(start >= 0 && listing.index > start && listing.index < end, 'Complete code belongs to its method.');
+}
+assert.doesNotMatch(javaN, /\\bmid\\b|midPath|appendSegment/);
+assert.doesNotMatch(javaM, /\\bnext\\b|nextPath/);
+assert.doesNotMatch(html, /<section id="code">|FloydWarshallPaths\\.java|id="java-source"/);
 assert.doesNotMatch(html, /<details\b|role="tab(?:list|panel)?"/i);
 assert.doesNotMatch(html, /(?:href|src)\s*=\s*["'](?:https?:)?\/\//i);
 const diagrams = [...html.matchAll(/<svg class="route-graph"[\s\S]*?<\/svg>/g)].map(x => x[0]);
@@ -22,8 +36,10 @@ for (const drawing of diagrams.slice(1)) {
   assert.deepEqual(input(drawing), edges);
   assert.equal((drawing.match(/role="button" tabindex="0"/g) || []).length, 4);
 }
-const javaEdges = [...java.matchAll(/\{(\d+), (\d+), (\d+)\}/g)].map(([,u,v,w]) => [+u - 1, +v - 1, +w]);
-assert.deepEqual(edges, javaEdges);
+for (const java of [javaN, javaM]) {
+  const javaEdges = [...java.matchAll(/\{(\d+), (\d+), (\d+)\}/g)].map(([,u,v,w]) => [+u - 1, +v - 1, +w]);
+  assert.deepEqual(edges, javaEdges);
+}
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 assert.equal(new Set(ids).size, ids.length);
 const m = engine.build(4, edges);

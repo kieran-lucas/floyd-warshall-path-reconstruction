@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Truy vết đường đi với Floyd–Warshall</title>
 <meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ bốn đỉnh và mã Java.">
-<link rel="stylesheet" href="lesson.css?v=inline4"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
+<link rel="stylesheet" href="lesson.css?v=split1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
 </head>
 <body><main>
 <header><h1>Truy vết đường đi với Floyd–Warshall</h1></header>
@@ -105,6 +105,108 @@
     <label>Tốc độ <select data-role="speed"><option value="2200">0,5×</option><option value="1100" selected>1×</option><option value="550">2×</option></select></label><span data-role="count"></span></div>
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div></div>
+<div class="full-source" id="code-n">
+<h4>Chương trình Java hoàn chỉnh — Next-Hop</h4>
+<p>Lưu vào tệp <code>FloydWarshallNextHop.java</code> hoặc <a class="source-download" href="FloydWarshallNextHop.java" download>Tải mã nguồn</a>. Chương trình chỉ sử dụng ma trận D và ma trận N để truy vết một đường đi ngắn nhất.</p>
+<pre><code id="java-n-source">import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public final class FloydWarshallNextHop {
+    private static final long INF = Long.MAX_VALUE / 2;
+    private final int n;
+    private final long[][] d;
+    private final int[][] next;
+
+    public FloydWarshallNextHop(int n, int[][] edges) {
+        this.n = n;
+        d = new long[n + 1][n + 1];
+        next = new int[n + 1][n + 1];
+        for (int i = 1; i &lt;= n; i++) {
+            Arrays.fill(d[i], INF);
+            Arrays.fill(next[i], -1);
+            d[i][i] = 0;
+            next[i][i] = i;
+        }
+        for (int[] edge : edges) {
+            int u = edge[0], v = edge[1], w = edge[2];
+            if (w &lt; d[u][v]) {
+                d[u][v] = w;
+                next[u][v] = v;
+            }
+        }
+        build();
+    }
+
+    private void build() {
+        for (int k = 1; k &lt;= n; k++) {
+            for (int i = 1; i &lt;= n; i++) {
+                if (d[i][k] == INF) continue;
+                for (int j = 1; j &lt;= n; j++) {
+                    if (d[k][j] == INF) continue;
+                    long via = d[i][k] + d[k][j];
+                    if (via &lt; d[i][j]) {
+                        // Chặn tràn số khi một chu trình âm làm chi phí giảm liên tục.
+                        d[i][j] = Math.max(-INF, via);
+                        next[i][j] = next[i][k];
+                    }
+                }
+            }
+        }
+    }
+
+    public long distance(int s, int t) {
+        for (int k = 1; k &lt;= n; k++) {
+            if (d[s][k] != INF &amp;&amp; d[k][k] &lt; 0 &amp;&amp; d[k][t] != INF) {
+                throw new IllegalStateException("Cặp đỉnh đi qua được chu trình âm.");
+            }
+        }
+        return d[s][t];
+    }
+
+    public List&lt;Integer&gt; nextPath(int s, int t) {
+        if (distance(s, t) == INF) return List.of();
+        List&lt;Integer&gt; path = new ArrayList&lt;&gt;();
+        path.add(s);
+        while (s != t) {
+            s = next[s][t];
+            path.add(s);
+        }
+        return path;
+    }
+
+    public static void main(String[] args) {
+        int[][] edges = {
+            {1, 2, 4}, {1, 3, 15}, {1, 4, 20},
+            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}
+        };
+        int n = 4;
+        if (args.length != 0 &amp;&amp; args.length != 2) {
+            throw new IllegalArgumentException("Dùng hai đối số: nguồn đích.");
+        }
+        int s = args.length == 0 ? 1 : Integer.parseInt(args[0]);
+        int t = args.length == 0 ? 4 : Integer.parseInt(args[1]);
+        if (s &lt; 1 || s &gt; n || t &lt; 1 || t &gt; n) {
+            throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
+        }
+        FloydWarshallNextHop f = new FloydWarshallNextHop(n, edges);
+        long length = f.distance(s, t);
+        if (length == INF) {
+            System.out.printf("Không có đường từ %d tới %d.%n", s, t);
+            return;
+        }
+        System.out.printf("D[%d][%d] = %d%n", s, t, length);
+        System.out.println("N = " + f.nextPath(s, t));
+    }
+}
+</code></pre>
+<p>Biên dịch và chạy với nguồn 1, đích 4:</p>
+<pre><code>javac -encoding UTF-8 FloydWarshallNextHop.java
+java FloydWarshallNextHop 1 4</code></pre>
+<p>Kết quả:</p>
+<pre><code>D[1][4] = 9
+N = [1, 2, 3, 4]</code></pre>
+</div>
 </div>
 <div id="intermediate"><h3>Cách 2: Ma trận đỉnh trung gian (Intermediate Matrix)</h3>
 <p>Ở phép ghép vừa rồi, Floyd dùng đỉnh 3 để nối hai đoạn đường. Nếu ghi lại số 3, sau này ta sẽ biết phải dựng đoạn 1 → 3 trước, rồi nối với đoạn 3 → 4. Áp dụng cùng ý tưởng cho đoạn 1 → 3, ta tìm lại được điểm chia là đỉnh 2.</p>
@@ -170,60 +272,32 @@
     <label>Tốc độ <select data-role="speed"><option value="2200">0,5×</option><option value="1100" selected>1×</option><option value="550">2×</option></select></label><span data-role="count"></span></div>
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div>
-</div>
-</section>
-<section id="comparison"><h2>4. So sánh hai cách lưu vết</h2>
-<p>Nhìn lại ô (1, 4) trong cả ba ma trận ở các lượt cập nhật:</p>
-<table class="compare state-compare"><thead><tr><th scope="col">Trạng thái</th><th scope="col">D[1][4]</th><th scope="col">N[1][4]</th><th scope="col">M[1][4]</th></tr></thead><tbody>
-<tr><th scope="row">Khởi tạo</th><td>20</td><td>4</td><td>−1</td></tr>
-<tr><th scope="row">Sau k = 2</th><td>14</td><td>2</td><td>2</td></tr>
-<tr><th scope="row">Sau k = 3</th><td class="changed">9</td><td>2</td><td class="changed">3</td></tr></tbody></table>
-<p>Ở lượt k = 3, đường mới vẫn bắt đầu bằng cạnh 1 → 2, nên N[1][4] giữ nguyên. Điểm nối hai đoạn lại đổi thành đỉnh 3, nên M[1][4] nhận giá trị 3. Sự khác nhau này thể hiện rõ khi ta truy vết từ 1 đến 4.</p>
-<div class="trace-compare">
-<figure><figcaption>Next-Hop — truy xuôi theo từng bước</figcaption>
-<svg class="compare-diagram" role="img" aria-label="Đọc N[1][4] bằng 2, N[2][4] bằng 3 và N[3][4] bằng 4" viewBox="0 0 420 174"><defs><marker id="compare-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L7 3.5L0 7Z" fill="#174e86"/></marker></defs>
-<g class="compare-arrow" marker-end="url(#compare-arrow)"><path d="M51 83H136"/><path d="M163 83H248"/><path d="M275 83H360"/></g>
-<g class="compare-label"><text x="94" y="57">N[1][4]</text><text x="206" y="57">N[2][4]</text><text x="318" y="57">N[3][4]</text></g>
-<g class="compare-node"><circle cx="37" cy="83" r="14"/><circle cx="149" cy="83" r="14"/><circle cx="261" cy="83" r="14"/><circle cx="373" cy="83" r="14"/><text x="37" y="83">1</text><text x="149" y="83">2</text><text x="261" y="83">3</text><text x="373" y="83">4</text></g><text class="compare-label" x="205" y="128">Giữ nguyên cột đích 4</text></svg>
-<p>Đọc ba ô N và nối các bước theo thứ tự.</p></figure>
-<figure><figcaption>Intermediate — phân chia rồi ghép đoạn</figcaption>
-<svg class="compare-diagram" role="img" aria-label="M[1][4] bằng 3: chia thành 1 đến 3 và 3 đến 4. M[1][3] bằng 2: chia thành 1 đến 2 và 2 đến 3." viewBox="0 0 420 174">
-<g class="compare-branch"><path d="M210 44L113 70M210 44L325 70M113 104L55 131M113 104L173 131"/></g>
-<g class="compare-split"><rect x="162" y="7" width="96" height="37" rx="4"/><rect x="65" y="67" width="96" height="37" rx="4"/><text x="210" y="19">(1, 4)</text><text class="compare-sub" x="210" y="33">k = 3</text><text x="113" y="79">(1, 3)</text><text class="compare-sub" x="113" y="93">k = 2</text></g>
-<g class="compare-leaf"><rect x="277" y="67" width="96" height="37" rx="4"/><rect x="7" y="129" width="96" height="37" rx="4"/><rect x="125" y="129" width="96" height="37" rx="4"/><text x="325" y="79">(3, 4)</text><text class="compare-sub" x="325" y="93">cạnh gốc</text><text x="55" y="141">(1, 2)</text><text class="compare-sub" x="55" y="155">cạnh gốc</text><text x="173" y="141">(2, 3)</text><text class="compare-sub" x="173" y="155">cạnh gốc</text></g></svg>
-<p>Đọc M, dựng đoạn trái trước rồi dựng đoạn phải.</p></figure>
-<div class="compare-result">Cùng một đường đi: <strong>1 → 2 → 3 → 4</strong> · Tổng trọng số: 9</div></div>
-<p>Với V đỉnh, mỗi cách dùng thêm một ma trận O(V²). Phép gán thêm nằm trong nhánh cập nhật khoảng cách, nên thời gian chạy Floyd vẫn là O(V³). Khi đường đi có L cạnh, việc dựng đường cần O(L + 1) thời gian ở cả hai cách: N dùng vòng lặp, M dùng đệ quy. Phần kiểm tra chu trình âm trong hàm <code>distance</code> ở chương trình dưới đây mất thêm O(V) mỗi truy vấn. Nếu có nhiều đường cùng ngắn nhất, điều kiện <code>via &lt; d[i][j]</code> giữ một đường đã chọn trước đó.</p>
-</section>
-<section id="code"><h2>5. Chương trình Java</h2>
-<p>Lưu đoạn mã sau vào tệp <code>FloydWarshallPaths.java</code>. Chương trình dùng cả hai cách để tìm lại đường đi trên đồ thị ở đầu bài.</p>
-<pre><code id="java-source">import java.util.ArrayList;
+<div class="full-source" id="code-m">
+<h4>Chương trình Java hoàn chỉnh — Intermediate</h4>
+<p>Lưu vào tệp <code>FloydWarshallIntermediate.java</code> hoặc <a class="source-download" href="FloydWarshallIntermediate.java" download>Tải mã nguồn</a>. Chương trình chỉ sử dụng ma trận D và ma trận M để truy vết một đường đi ngắn nhất.</p>
+<pre><code id="java-m-source">import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class FloydWarshallPaths {
+public final class FloydWarshallIntermediate {
     private static final long INF = Long.MAX_VALUE / 2;
     private final int n;
     private final long[][] d;
-    private final int[][] next, mid;
+    private final int[][] mid;
 
-    public FloydWarshallPaths(int n, int[][] edges) {
+    public FloydWarshallIntermediate(int n, int[][] edges) {
         this.n = n;
         d = new long[n + 1][n + 1];
-        next = new int[n + 1][n + 1];
         mid = new int[n + 1][n + 1];
         for (int i = 1; i &lt;= n; i++) {
             Arrays.fill(d[i], INF);
-            Arrays.fill(next[i], -1);
             Arrays.fill(mid[i], -1);
             d[i][i] = 0;
-            next[i][i] = i;
         }
         for (int[] edge : edges) {
             int u = edge[0], v = edge[1], w = edge[2];
             if (w &lt; d[u][v]) {
                 d[u][v] = w;
-                next[u][v] = v;
             }
         }
         build();
@@ -239,7 +313,6 @@ public final class FloydWarshallPaths {
                     if (via &lt; d[i][j]) {
                         // Chặn tràn số khi một chu trình âm làm chi phí giảm liên tục.
                         d[i][j] = Math.max(-INF, via);
-                        next[i][j] = next[i][k];
                         mid[i][j] = k;
                     }
                 }
@@ -254,17 +327,6 @@ public final class FloydWarshallPaths {
             }
         }
         return d[s][t];
-    }
-
-    public List&lt;Integer&gt; nextPath(int s, int t) {
-        if (distance(s, t) == INF) return List.of();
-        List&lt;Integer&gt; path = new ArrayList&lt;&gt;();
-        path.add(s);
-        while (s != t) {
-            s = next[s][t];
-            path.add(s);
-        }
-        return path;
     }
 
     public List&lt;Integer&gt; midPath(int s, int t) {
@@ -300,20 +362,48 @@ public final class FloydWarshallPaths {
         if (s &lt; 1 || s &gt; n || t &lt; 1 || t &gt; n) {
             throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
         }
-        FloydWarshallPaths f = new FloydWarshallPaths(n, edges);
+        FloydWarshallIntermediate f = new FloydWarshallIntermediate(n, edges);
         long length = f.distance(s, t);
         if (length == INF) {
             System.out.printf("Không có đường từ %d tới %d.%n", s, t);
             return;
         }
         System.out.printf("D[%d][%d] = %d%n", s, t, length);
-        System.out.println("N = " + f.nextPath(s, t));
         System.out.println("M = " + f.midPath(s, t));
     }
 }
 </code></pre>
-<p>Biên dịch và chạy với đỉnh nguồn 1, đỉnh đích 4.</p>
-<pre><code>javac -encoding UTF-8 FloydWarshallPaths.java
-java FloydWarshallPaths 1 4</code></pre>
+<p>Biên dịch và chạy với nguồn 1, đích 4:</p>
+<pre><code>javac -encoding UTF-8 FloydWarshallIntermediate.java
+java FloydWarshallIntermediate 1 4</code></pre>
+<p>Kết quả:</p>
+<pre><code>D[1][4] = 9
+M = [1, 2, 3, 4]</code></pre>
+</div>
+</div>
 </section>
+<section id="comparison"><h2>4. So sánh hai cách lưu vết</h2>
+<p>Nhìn lại ô (1, 4) trong cả ba ma trận ở các lượt cập nhật:</p>
+<table class="compare state-compare"><thead><tr><th scope="col">Trạng thái</th><th scope="col">D[1][4]</th><th scope="col">N[1][4]</th><th scope="col">M[1][4]</th></tr></thead><tbody>
+<tr><th scope="row">Khởi tạo</th><td>20</td><td>4</td><td>−1</td></tr>
+<tr><th scope="row">Sau k = 2</th><td>14</td><td>2</td><td>2</td></tr>
+<tr><th scope="row">Sau k = 3</th><td class="changed">9</td><td>2</td><td class="changed">3</td></tr></tbody></table>
+<p>Ở lượt k = 3, đường mới vẫn bắt đầu bằng cạnh 1 → 2, nên N[1][4] giữ nguyên. Điểm nối hai đoạn lại đổi thành đỉnh 3, nên M[1][4] nhận giá trị 3. Sự khác nhau này thể hiện rõ khi ta truy vết từ 1 đến 4.</p>
+<div class="trace-compare">
+<figure><figcaption>Next-Hop — truy xuôi theo từng bước</figcaption>
+<svg class="compare-diagram" role="img" aria-label="Đọc N[1][4] bằng 2, N[2][4] bằng 3 và N[3][4] bằng 4" viewBox="0 0 420 174"><defs><marker id="compare-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L7 3.5L0 7Z" fill="#174e86"/></marker></defs>
+<g class="compare-arrow" marker-end="url(#compare-arrow)"><path d="M51 83H136"/><path d="M163 83H248"/><path d="M275 83H360"/></g>
+<g class="compare-label"><text x="94" y="57">N[1][4]</text><text x="206" y="57">N[2][4]</text><text x="318" y="57">N[3][4]</text></g>
+<g class="compare-node"><circle cx="37" cy="83" r="14"/><circle cx="149" cy="83" r="14"/><circle cx="261" cy="83" r="14"/><circle cx="373" cy="83" r="14"/><text x="37" y="83">1</text><text x="149" y="83">2</text><text x="261" y="83">3</text><text x="373" y="83">4</text></g><text class="compare-label" x="205" y="128">Giữ nguyên cột đích 4</text></svg>
+<p>Đọc ba ô N và nối các bước theo thứ tự.</p></figure>
+<figure><figcaption>Intermediate — phân chia rồi ghép đoạn</figcaption>
+<svg class="compare-diagram" role="img" aria-label="M[1][4] bằng 3: chia thành 1 đến 3 và 3 đến 4. M[1][3] bằng 2: chia thành 1 đến 2 và 2 đến 3." viewBox="0 0 420 174">
+<g class="compare-branch"><path d="M210 44L113 70M210 44L325 70M113 104L55 131M113 104L173 131"/></g>
+<g class="compare-split"><rect x="162" y="7" width="96" height="37" rx="4"/><rect x="65" y="67" width="96" height="37" rx="4"/><text x="210" y="19">(1, 4)</text><text class="compare-sub" x="210" y="33">k = 3</text><text x="113" y="79">(1, 3)</text><text class="compare-sub" x="113" y="93">k = 2</text></g>
+<g class="compare-leaf"><rect x="277" y="67" width="96" height="37" rx="4"/><rect x="7" y="129" width="96" height="37" rx="4"/><rect x="125" y="129" width="96" height="37" rx="4"/><text x="325" y="79">(3, 4)</text><text class="compare-sub" x="325" y="93">cạnh gốc</text><text x="55" y="141">(1, 2)</text><text class="compare-sub" x="55" y="155">cạnh gốc</text><text x="173" y="141">(2, 3)</text><text class="compare-sub" x="173" y="155">cạnh gốc</text></g></svg>
+<p>Đọc M, dựng đoạn trái trước rồi dựng đoạn phải.</p></figure>
+<div class="compare-result">Cùng một đường đi: <strong>1 → 2 → 3 → 4</strong> · Tổng trọng số: 9</div></div>
+<p>Với V đỉnh, mỗi cách dùng thêm một ma trận O(V²). Phép gán thêm nằm trong nhánh cập nhật khoảng cách, nên thời gian chạy Floyd vẫn là O(V³). Khi đường đi có L cạnh, việc dựng đường cần O(L + 1) thời gian ở cả hai cách: N dùng vòng lặp, M dùng đệ quy. Phần kiểm tra chu trình âm trong hàm <code>distance</code> của hai chương trình trên mất thêm O(V) mỗi truy vấn. Nếu có nhiều đường cùng ngắn nhất, điều kiện <code>via &lt; d[i][j]</code> giữ một đường đã chọn trước đó.</p>
+</section>
+
 </main></body></html>
