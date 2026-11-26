@@ -4,13 +4,13 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Truy vết đường đi với Floyd–Warshall</title>
 <meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ bốn đỉnh và mã Java.">
-<link rel="stylesheet" href="lesson.css?v=inline3"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
+<link rel="stylesheet" href="lesson.css?v=inline4"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
 </head>
 <body><main>
 <header><h1>Truy vết đường đi với Floyd–Warshall</h1></header>
 <section id="problem"><h2>1. Bài toán</h2>
-<p>Trên đồ thị có trọng số không âm, chạy Dijkstra từ đỉnh 1 cho ta khoảng cách từ 1 đến mọi đỉnh còn lại. Kết quả ấy dùng được cho cả hai câu hỏi 1 → 3 và 1 → 4. Nếu đổi nguồn sang đỉnh 2, ta có thể phải chạy lại Dijkstra.</p>
-<p>Khi cần tra cứu giữa mọi cặp đỉnh, ta có thể dùng Floyd–Warshall để tính sẵn một bảng khoảng cách. Nếu đề bài còn yêu cầu in đường đi, ta cần biết mỗi khoảng cách trong bảng được tính từ những cạnh nào.</p>
+<p>Dijkstra là thuật toán thường dùng để tìm đường đi ngắn nhất trên đồ thị có trọng số không âm. Chẳng hạn, chạy Dijkstra từ đỉnh 1 cho ta khoảng cách từ 1 đến các đỉnh còn lại. Kết quả ấy dùng được cho cả hai câu hỏi 1 → 3 và 1 → 4. Nhưng nếu đổi nguồn sang đỉnh 2, ta có thể phải chạy lại thuật toán.</p>
+<p>Khi cần tìm đường đi giữa hai đỉnh bất kỳ, Floyd–Warshall cho phép tính trước khoảng cách ngắn nhất giữa mọi cặp đỉnh trong một lần chạy. Phiên bản cơ bản của thuật toán trả về ma trận khoảng cách; nếu muốn in ra dãy đỉnh của đường đi, ta cần khôi phục thông tin ấy. Ta sẽ tìm hiểu hai cách bổ sung ma trận lưu vết ngay trong quá trình tính Floyd.</p>
 </section>
 <section id="floyd"><h2>2. Ma trận khoảng cách của Floyd–Warshall</h2>
 <p>Gọi D là ma trận khoảng cách, với hàng là nguồn và cột là đích. Ban đầu mỗi ô mang trọng số của cạnh trực tiếp. Đường chéo bằng 0, còn ∞ nghĩa là hai đỉnh chưa có cạnh nối theo chiều đó.</p>
@@ -33,15 +33,15 @@
           </svg></figure></div>
 
 <p>Cạnh 1 → 3 có trọng số 15. Đi qua 2 chỉ tốn 4 + 3 = 7, nên Floyd đổi <code>D[1][3]</code> từ 15 thành 7. Cũng ở lượt này, đường 1 → 2 → 4 tốn 4 + 10 = 14, ngắn hơn cạnh trực tiếp có trọng số 20. Sang lượt xét đỉnh 3, ghép đường vừa tìm được từ 1 đến 3 với cạnh 3 → 4 chỉ tốn 7 + 2 = 9. Ô <code>D[1][4]</code> giảm từ 14 xuống 9.</p>
-<p>Với mỗi đỉnh trung gian k, Floyd thực hiện cùng phép so sánh cho từng cặp i, j. Hai đoạn i → k và k → j có thể đã đi qua các đỉnh được xét ở những lượt trước.</p>
+<p>Sau lượt xét k, <code>D[i][j]</code> là khoảng cách ngắn nhất từ i đến j khi chỉ cho phép các đỉnh 1, 2, …, k làm trung gian. Hai đầu mút i, j không bị giới hạn trong tập này. Khi xét thêm k, ta so sánh đường đang có với đường ghép từ i đến k rồi từ k đến j. Hai đoạn này có thể đã đi qua các đỉnh trung gian được xét ở những lượt trước.</p>
 <pre class="formula"><code>D[i][j] = min(D[i][j], D[i][k] + D[k][j])</code></pre>
 </section>
 <section id="methods"><h2>3. Các cách lưu vết cho Floyd–Warshall</h2>
-<p>Ô <code>D[1][4]</code> bây giờ chứa số 9. Để in đường đi, ta cần biết số 9 ấy ứng với dãy đỉnh nào. Hãy trở lại lúc Floyd ghép đường từ 1 tới 3 với cạnh 3 → 4. Ngay ở bước này, ta có thể ghi thêm thông tin để dùng khi truy vết.</p>
+<p>Sau khi chạy Floyd, <code>D[1][4] = 9</code>. Làm thế nào để từ kết quả đó khôi phục được đường đi 1 → 2 → 3 → 4? Hãy trở lại lúc Floyd ghép đường từ 1 tới 3 với cạnh 3 → 4. Ta có thể ghi nhớ bước đầu của đường mới, hoặc đỉnh trung gian vừa dùng để nối hai đoạn. Hai cách lưu thông tin này dẫn đến hai cách truy vết khác nhau.</p>
 
-<div id="next-hop"><h3>Cách thứ nhất</h3>
+<div id="next-hop"><h3>Cách 1: Ma trận bước kế tiếp (Next-Hop Matrix)</h3>
 <p>Giả sử ta viết các đỉnh lần lượt từ nguồn đến đích. Viết 1 xong, ta cần biết đỉnh nào đứng ngay sau 1. Đường tới 4 bắt đầu bằng đoạn từ 1 tới 3, mà đoạn này đi qua 2 trước. Vậy đỉnh tiếp theo cần viết là 2. Đứng ở 2, ta lại cần biết phải đi sang đâu để tới 4.</p>
-<p>Ta sẽ lập một ma trận bước kế tiếp, đặt tên là <code>next</code>, để có thể tra bước đi đầu tiên cho bất kỳ cặp đỉnh nào. Trên hình, ma trận này được ký hiệu là N. Với cạnh trực tiếp i → j, ban đầu ta ghi <code>next[i][j] = j</code>. Sau đó, mỗi khi Floyd tìm được đường ngắn hơn qua k, bước đầu của đường từ i tới j cũng là bước đầu của đoạn từ i tới k.</p>
+<p>Ta sẽ lập một ma trận bước kế tiếp, đặt tên là <code>next</code>, để có thể tra bước đi đầu tiên cho bất kỳ cặp đỉnh nào. Trên hình, ma trận này được ký hiệu là N. Với cạnh trực tiếp i → j, ban đầu ta ghi <code>next[i][j] = j</code>. Các ô chưa có đường đi được gán −1; trên đường chéo, <code>next[i][i] = i</code>. Sau đó, mỗi khi Floyd tìm được đường ngắn hơn qua k, bước đầu của đường từ i tới j cũng là bước đầu của đoạn từ i tới k.</p>
 <pre id="next-code"><code><span class="kw">int</span>[][] next = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
 <span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
     <span class="kw">Arrays</span>.fill(next[i], -1);
@@ -74,6 +74,7 @@
     }
     <span class="kw">return</span> path;
 }</code></pre>
+<p class="demo-intro">Trong hình dưới đây, chọn đỉnh 1 rồi đỉnh 4 để xem N được đọc theo cột 4. Chuyển sang giai đoạn xây dựng ma trận để theo dõi N thay đổi khi Floyd tìm được đường ngắn hơn.</p>
 <div id="simulation"><div class="demo" data-method="N" id="demo-n">
   <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
     <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ hiện bước giảm khoảng cách</label></div>
@@ -105,7 +106,7 @@
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div></div>
 </div>
-<div id="intermediate"><h3>Cách thứ hai</h3>
+<div id="intermediate"><h3>Cách 2: Ma trận đỉnh trung gian (Intermediate Matrix)</h3>
 <p>Ở phép ghép vừa rồi, Floyd dùng đỉnh 3 để nối hai đoạn đường. Nếu ghi lại số 3, sau này ta sẽ biết phải dựng đoạn 1 → 3 trước, rồi nối với đoạn 3 → 4. Áp dụng cùng ý tưởng cho đoạn 1 → 3, ta tìm lại được điểm chia là đỉnh 2.</p>
 <p>Ta lập một ma trận đỉnh trung gian, đặt tên là <code>mid</code> và ký hiệu là M trên hình. Mỗi ô <code>mid[i][j]</code> lưu đỉnh k tại lần cập nhật gần nhất làm giảm <code>D[i][j]</code>. Ban đầu các ô đều bằng −1.</p>
 <pre><code><span class="kw">int</span>[][] mid = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
@@ -137,6 +138,7 @@
     appendSegment(i, k, path);
     appendSegment(k, j, path);
 }</code></pre>
+<p class="demo-intro">Chọn lại hai đỉnh 1 và 4. Lần này, theo dõi các ô M được đọc và danh sách lời gọi đệ quy để thấy cách đường đi được chia nhỏ rồi ghép lại.</p>
 <div class="demo" data-method="M" id="demo-m">
   <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
     <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ hiện bước giảm khoảng cách</label></div>
@@ -171,10 +173,27 @@
 </div>
 </section>
 <section id="comparison"><h2>4. So sánh hai cách lưu vết</h2>
-<table class="compare"><thead><tr><th scope="col">Từ 1 tới 4</th><th scope="col">N</th><th scope="col">M</th></tr></thead>
-<tbody><tr><th scope="row">Ô (1, 4)</th><td>2, đỉnh ngay sau 1</td><td>3, đỉnh chia đường</td></tr>
-<tr><th scope="row">Bước đọc tiếp</th><td>Tra N[2][4] để đi tiếp từ 2.</td><td>Dựng đoạn (1, 3), rồi đoạn (3, 4).</td></tr></tbody></table>
-<p>Với V đỉnh, mỗi cách dùng thêm một ma trận O(V²). Phép gán thêm nằm trong nhánh cập nhật khoảng cách, nên thời gian chạy Floyd vẫn là O(V³). Nếu có hai đường ngắn bằng nhau, điều kiện <code>via &lt; d[i][j]</code> giữ đường đã chọn trước đó.</p>
+<p>Nhìn lại ô (1, 4) trong cả ba ma trận ở các lượt cập nhật:</p>
+<table class="compare state-compare"><thead><tr><th scope="col">Trạng thái</th><th scope="col">D[1][4]</th><th scope="col">N[1][4]</th><th scope="col">M[1][4]</th></tr></thead><tbody>
+<tr><th scope="row">Khởi tạo</th><td>20</td><td>4</td><td>−1</td></tr>
+<tr><th scope="row">Sau k = 2</th><td>14</td><td>2</td><td>2</td></tr>
+<tr><th scope="row">Sau k = 3</th><td class="changed">9</td><td>2</td><td class="changed">3</td></tr></tbody></table>
+<p>Ở lượt k = 3, đường mới vẫn bắt đầu bằng cạnh 1 → 2, nên N[1][4] giữ nguyên. Điểm nối hai đoạn lại đổi thành đỉnh 3, nên M[1][4] nhận giá trị 3. Sự khác nhau này thể hiện rõ khi ta truy vết từ 1 đến 4.</p>
+<div class="trace-compare">
+<figure><figcaption>Next-Hop — truy xuôi theo từng bước</figcaption>
+<svg class="compare-diagram" role="img" aria-label="Đọc N[1][4] bằng 2, N[2][4] bằng 3 và N[3][4] bằng 4" viewBox="0 0 420 174"><defs><marker id="compare-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L7 3.5L0 7Z" fill="#174e86"/></marker></defs>
+<g class="compare-arrow" marker-end="url(#compare-arrow)"><path d="M51 83H136"/><path d="M163 83H248"/><path d="M275 83H360"/></g>
+<g class="compare-label"><text x="94" y="57">N[1][4]</text><text x="206" y="57">N[2][4]</text><text x="318" y="57">N[3][4]</text></g>
+<g class="compare-node"><circle cx="37" cy="83" r="14"/><circle cx="149" cy="83" r="14"/><circle cx="261" cy="83" r="14"/><circle cx="373" cy="83" r="14"/><text x="37" y="83">1</text><text x="149" y="83">2</text><text x="261" y="83">3</text><text x="373" y="83">4</text></g><text class="compare-label" x="205" y="128">Giữ nguyên cột đích 4</text></svg>
+<p>Đọc ba ô N và nối các bước theo thứ tự.</p></figure>
+<figure><figcaption>Intermediate — phân chia rồi ghép đoạn</figcaption>
+<svg class="compare-diagram" role="img" aria-label="M[1][4] bằng 3: chia thành 1 đến 3 và 3 đến 4. M[1][3] bằng 2: chia thành 1 đến 2 và 2 đến 3." viewBox="0 0 420 174">
+<g class="compare-branch"><path d="M210 44L113 70M210 44L325 70M113 104L55 131M113 104L173 131"/></g>
+<g class="compare-split"><rect x="162" y="7" width="96" height="37" rx="4"/><rect x="65" y="67" width="96" height="37" rx="4"/><text x="210" y="19">(1, 4)</text><text class="compare-sub" x="210" y="33">k = 3</text><text x="113" y="79">(1, 3)</text><text class="compare-sub" x="113" y="93">k = 2</text></g>
+<g class="compare-leaf"><rect x="277" y="67" width="96" height="37" rx="4"/><rect x="7" y="129" width="96" height="37" rx="4"/><rect x="125" y="129" width="96" height="37" rx="4"/><text x="325" y="79">(3, 4)</text><text class="compare-sub" x="325" y="93">cạnh gốc</text><text x="55" y="141">(1, 2)</text><text class="compare-sub" x="55" y="155">cạnh gốc</text><text x="173" y="141">(2, 3)</text><text class="compare-sub" x="173" y="155">cạnh gốc</text></g></svg>
+<p>Đọc M, dựng đoạn trái trước rồi dựng đoạn phải.</p></figure>
+<div class="compare-result">Cùng một đường đi: <strong>1 → 2 → 3 → 4</strong> · Tổng trọng số: 9</div></div>
+<p>Với V đỉnh, mỗi cách dùng thêm một ma trận O(V²). Phép gán thêm nằm trong nhánh cập nhật khoảng cách, nên thời gian chạy Floyd vẫn là O(V³). Khi đường đi có L cạnh, việc dựng đường cần O(L + 1) thời gian ở cả hai cách: N dùng vòng lặp, M dùng đệ quy. Phần kiểm tra chu trình âm trong hàm <code>distance</code> ở chương trình dưới đây mất thêm O(V) mỗi truy vấn. Nếu có nhiều đường cùng ngắn nhất, điều kiện <code>via &lt; d[i][j]</code> giữ một đường đã chọn trước đó.</p>
 </section>
 <section id="code"><h2>5. Chương trình Java</h2>
 <p>Lưu đoạn mã sau vào tệp <code>FloydWarshallPaths.java</code>. Chương trình dùng cả hai cách để tìm lại đường đi trên đồ thị ở đầu bài.</p>

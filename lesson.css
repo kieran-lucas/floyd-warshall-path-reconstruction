@@ -123,3 +123,30 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
   table, .views { break-inside: avoid; }
   pre { white-space: pre-wrap; overflow: visible; }
 }
+
+/* Worked comparison: same palette and typography as the matrix trace. */
+.demo-intro { margin-top: 16px; }
+.state-compare td { font: 12px/1.35 var(--mono); text-align: center; }
+.state-compare th:not(:first-child) { text-align: center; }
+.state-compare .changed { background: var(--green-bg); color: var(--green); font-weight: 650; }
+.trace-compare { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); border: 1px solid var(--line); border-radius: 5px; margin: 12px 0 16px; }
+.trace-compare figure { margin: 0; padding: 12px 14px 8px; min-width: 0; }
+.trace-compare figure + figure { border-left: 1px solid var(--line); }
+.trace-compare figcaption { font: 600 13.5px/1.5 var(--sans); margin: 0 0 5px; }
+.trace-compare figure p { font-size: 12px; margin: 6px 0; }
+.compare-diagram { display: block; width: 100%; max-width: 420px; margin: 0 auto; }
+.compare-diagram text { font: 600 12px var(--mono); text-anchor: middle; dominant-baseline: central; }
+.compare-diagram .compare-label { font-size: 11px; fill: var(--muted); }
+.compare-arrow { fill: none; stroke: var(--blue); stroke-width: 1.7; }
+.compare-branch { fill: none; stroke: #97a9bc; stroke-width: 1.5; }
+.compare-node circle { fill: var(--blue-bg); stroke: var(--blue-border); stroke-width: 1.4; }
+.compare-node text { fill: var(--blue); font-size: 14px; }
+.compare-split rect { fill: #f1edfc; stroke: #d6cbf4; }
+.compare-split text { fill: #69559c; }
+.compare-leaf rect { fill: var(--green-bg); stroke: var(--green-border); }
+.compare-leaf text { fill: var(--green); }
+.compare-diagram .compare-sub { font-size: 10px; font-weight: 400; }
+.compare-result { grid-column: 1 / -1; border-top: 1px solid var(--line); background: #f7f8fa; border-radius: 0 0 5px 5px; padding: 9px 14px; font-size: 12px; color: var(--prose); }
+.compare-result strong { font: 600 12px/1.6 var(--mono); color: var(--blue); }
+@media(max-width: 600px) { .trace-compare { grid-template-columns: 1fr; } .trace-compare figure + figure { border-left: 0; border-top: 1px solid var(--line); } .trace-compare figure { padding: 10px; } .state-compare th:not(:first-child) { font: 10px/1.35 var(--mono); } }
+@media print { .trace-compare { break-inside: avoid; } }
