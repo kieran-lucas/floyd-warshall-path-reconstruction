@@ -184,7 +184,10 @@
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 
+  const requested = new URLSearchParams(window.location.search).get('method');
+  if (['N', 'P', 'M'].includes(requested)) methods.value = requested;
   frames = makeLesson(methods.value);
+  if (requested === methods.value) position = frames.findIndex(frame => frame.phase === 'trace');
   render();
   for (const control of [methods, byId('next'), byId('play')]) control.disabled = false;
 })();

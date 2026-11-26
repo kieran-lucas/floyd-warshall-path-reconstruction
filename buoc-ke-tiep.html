@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Từ Dijkstra đến Floyd–Warshall. Xem từng lần ghi và đọc ma trận để dựng lại đường đi ngắn nhất.">
+  <title>In đường đi bằng ma trận N · Floyd–Warshall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="lesson.css">
+  <script defer src="matrix-engine.js?v=5"></script>
+  <script defer src="lesson.js?v=2"></script>
+</head>
+<body id="top">
+  <header class="mast"><div class="wrap mast-inner">
+    <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 28 26"><path d="M5 19 14 5l9 14H5"/><circle cx="5" cy="19" r="3.2"/><circle cx="14" cy="5" r="3.2"/><circle cx="23" cy="19" r="3.2"/></svg> DSA <span>/</span> Đồ thị</a>
+    <a class="lab-link" href="laboratory.html">Phòng mô phỏng <span aria-hidden="true">→</span></a>
+  </div></header>
+
+  <nav class="chapters wrap" aria-label="Mục lục bài học"><a href="index.html"><span>1</span> Từ Dijkstra</a><a href="khoang-cach.html"><span>2</span> Ma trận D</a><a href="buoc-ke-tiep.html" aria-current="page"><span>3</span> Bước kế tiếp N</a><a href="cac-cach-truy-vet.html"><span>4</span> Hai cách P và M</a><a href="cai-dat.html"><span>5</span> Code Java</a></nav>
+  <main class="wrap reader">
+    <header class="chapter-head"><p class="folio">Trang 3 / 5</p>
+      <h1>In đường đi bằng ma trận <em>N</em></h1>
+      <p class="standfirst">Câu hỏi ở mỗi đỉnh rất cụ thể. Nếu đang đứng tại đây và muốn đến đích, ta nên đi sang đỉnh nào trước?</p>
+    </header>
+    
+<section class="reading"><h2>Mỗi ô lưu một bước rẽ</h2>
+<p><strong>N[i][j]</strong> là đỉnh ngay sau i trên một đường ngắn nhất đang biết từ i đến j. Với cạnh trực tiếp i → j, bước đầu là j. Ta đặt N[i][i] = i để biểu diễn đường đi độ dài 0. Cặp chưa tới được mang dấu —.</p>
+<p>Nếu đường qua k ngắn hơn, đoạn đầu tiên của toàn tuyến nằm trên đoạn i → k. Ta chép bước đầu đã biết của đoạn đó sang ô đang cập nhật.</p>
+<div class="equation">Nếu D[i][k] + D[k][j] &lt; D[i][j], ghi N[i][j] ← N[i][k].</div>
+<p>Ở lần cải thiện cuối, k = 3 nhưng đường từ 1 tới 3 bắt đầu bằng cạnh 1 → 2. Vì vậy ta ghi <strong>N[1][4] = N[1][3] = 2</strong>. Nếu ghi thẳng 3, cạnh đầu 1 → 3 sẽ tốn 6, đã đắt hơn toàn bộ đường tối ưu có chi phí 5.</p></section>
+    <section class="demo" id="simulation" aria-labelledby="demo-title">
+      <div class="demo-head"><h2 id="demo-title">Từ đỉnh 1 đến đỉnh 4</h2>
+        <label class="picker" for="method">Cách ghi dấu
+          <select id="method" disabled>
+            <option value="N">Bước kế tiếp (N)</option><option value="P">Đỉnh liền trước (P)</option><option value="M">Đỉnh trung gian (M)</option>
+          </select>
+        </label>
+      </div>
+      <div class="stages" role="group" aria-label="Giai đoạn minh họa">
+        <button type="button" data-stage="distance" aria-pressed="true" disabled>Đọc khoảng cách</button>
+        <button type="button" data-stage="build" aria-pressed="false" disabled>Ghi vào ma trận</button>
+        <button type="button" data-stage="trace" aria-pressed="false" disabled>Truy vết đường đi</button>
+      </div>
+      <div class="visuals" id="floyd">
+        <figure class="network">
+          <figcaption>Đồ thị có hướng</figcaption>
+          <svg id="graph" class="route-graph" role="img" aria-labelledby="graph-title" viewBox="0 0 370 202">
+            <title id="graph-title">Đồ thị bốn đỉnh. Các cạnh mang trọng số ghi cạnh mũi tên.</title>
+            <defs>
+              <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
+              <marker id="arrow-on" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
+            </defs>
+            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">9</text></g>
+            <g data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">2</text></g>
+            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">6</text></g>
+            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">6</text></g>
+            <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
+            <g data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">1</text></g>
+            <g data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
+            <g data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
+            <g data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
+            <g data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
+          </svg>
+        </figure>
+        <figure class="matrix-panel">
+          <figcaption id="matrix-caption">D · Khoảng cách</figcaption>
+          <table id="matrix" aria-labelledby="matrix-caption" aria-describedby="axis">
+            <thead><tr><td></td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col" class="axis-on">4</th></tr></thead>
+            <tbody>
+              <tr><th scope="row" class="axis-on">1</th><td>0</td><td>2</td><td>3</td><td class="read">5</td></tr>
+              <tr><th scope="row">2</th><td>∞</td><td>0</td><td>1</td><td>3</td></tr>
+              <tr><th scope="row">3</th><td>∞</td><td>∞</td><td>0</td><td>2</td></tr>
+              <tr><th scope="row">4</th><td>∞</td><td>∞</td><td>∞</td><td>0</td></tr>
+            </tbody>
+          </table>
+          <p id="axis">Hàng là nguồn, cột là đích.</p>
+        </figure>
+      </div>
+      <div class="explanation" aria-live="polite" aria-atomic="true">
+        <h3 id="headline">D[1][4] = 5</h3>
+        <p id="explain">Ô ở hàng 1, cột 4 cho biết tổng trọng số nhỏ nhất là 5. Từ đỉnh 1, ta phải đi sang đỉnh nào trước?</p>
+      </div>
+      <div class="player">
+        <span id="progress">Bước 1</span>
+        <div class="transport">
+          <button id="prev" type="button" disabled aria-label="Bước trước" title="Bước trước">←</button>
+          <button id="play" type="button" disabled><span aria-hidden="true">▶</span> <span id="play-label">Tự chạy</span></button>
+          <button id="next" type="button" disabled>Bước tiếp <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+      <noscript><p class="plain">Bật JavaScript để chạy minh họa. Với N, ta đọc N[1][4] = 2, N[2][4] = 3 rồi N[3][4] = 4, thu được đường 1 → 2 → 3 → 4.</p></noscript>
+    </section>
+
+<section class="reading"><h2>Giữ nguyên cột đích cho đến khi tới nơi</h2>
+<div class="worked-pair"><figure class="sheet-matrix"><table><caption>N sau khi chạy Floyd</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td>1</td><td>2</td><td>2</td><td class="lit">2</td></tr><tr><th scope="row">2</th><td class="absent">—</td><td>2</td><td>3</td><td class="lit">3</td></tr><tr><th scope="row">3</th><td class="absent">—</td><td class="absent">—</td><td>3</td><td class="lit">4</td></tr><tr><th scope="row">4</th><td class="absent">—</td><td class="absent">—</td><td class="absent">—</td><td>4</td></tr></tbody></table><figcaption>Ba ô được đọc liên tiếp cùng nằm ở cột 4.</figcaption></figure><div class="compare"><table><caption>Truy vết từ 1 tới 4</caption><thead><tr><th scope="col">Đang ở</th><th scope="col">Ô cần đọc</th><th scope="col">Đường đã dựng</th></tr></thead><tbody><tr><th scope="row">1</th><td>N[1][4] = 2</td><td>1 → 2</td></tr><tr><th scope="row">2</th><td>N[2][4] = 3</td><td>1 → 2 → 3</td></tr><tr><th scope="row">3</th><td>N[3][4] = 4</td><td>1 → 2 → 3 → 4</td></tr></tbody></table></div></div>
+<p>Xuất phát ở 1, mỗi lần đọc ta thêm đúng một đỉnh và chuyển sang hàng của đỉnh đó. Dừng ngay khi đỉnh hiện tại bằng đích. Với truy vấn 2 → 2, danh sách chỉ có [2]. Với 4 → 1, D[4][1] = ∞ nên kết quả là danh sách rỗng.</p>
+<p>Một ma trận N cần thêm Θ(n²) bộ nhớ. Khi đã biết cặp có khoảng cách hữu hạn, đường gồm L cạnh được in trong Θ(L + 1) thời gian. Đó là lý do N thuận tiện cho thao tác in một tuyến từ nguồn tới đích.</p></section>
+    <nav class="turn-page" aria-label="Chuyển trang"><a rel="prev" href="khoang-cach.html">← Ma trận D</a><a rel="next" href="cac-cach-truy-vet.html">Hai cách P và M →</a></nav>
+  </main>
+</body>
+</html>
