@@ -33,7 +33,7 @@
         const previous = model.frames[step - 1].state;
         const a = E.path(model, i, k, 'N', previous).paths[0];
         const b = E.path(model, k, j, 'N', previous).paths[0];
-        route = a.concat(b.slice(1));
+        if (a && b) route = a.concat(b.slice(1));
       }
       frames.push({
         step, state, reads, writes, target: ['D', i, j], route, focus: k, endpoints: [i, j],
@@ -92,8 +92,8 @@
       } else if (step.kind === 'advance') {
         const [, i, j] = step.lookups[0];
         frames.push({
-          ...base, route: step.route, focus: j, reads: [['M', i, j]],
-          title: 'Ghép cạnh ' + pair(i, j), detail: 'Thêm đỉnh ' + v(j) + ' vào cuối danh sách.',
+          ...base, route: step.route, focus: j, reads: [],
+          title: 'Ghép cạnh ' + pair(i, j), detail: 'Thêm đỉnh ' + v(j) + ' vào cuối danh sách. Không cần đọc thêm ô M.',
           entry: { depth: leafDepth + 1, text: 'Ghép ' + pair(i, j) }
         });
       }
@@ -106,7 +106,7 @@
     const key = root.dataset.method;
     const role = name => root.querySelector('[data-role="' + name + '"]');
     const action = name => root.querySelector('[data-action="' + name + '"]');
-    const phase = role('phase'), filter = role('filter'), speed = role('speed');
+    const phase = role('phase'), filter = role('filter'), speed = role('speed'), range = role('range');
     const play = action('play'), prev = action('prev'), next = action('next');
     const matrices = [...root.querySelectorAll('[data-matrix]')].map(table => ({
       key: table.dataset.matrix, cells: [...table.querySelectorAll('[data-cell]')].map(el => {
@@ -127,7 +127,7 @@
     function render() {
       const building = phase.value === 'build';
       const f = frames[pos] || { state: model.final, route: [], focus: source,
-        title: 'D và ' + key + ' sau khi chạy Floyd.', detail: '' };
+        title: 'D và ' + key + ' sau khi chạy Floyd.', detail: source === null ? 'Chọn nguồn và đích để bắt đầu truy vết.' : 'Đã chọn nguồn ' + v(source) + '. Chọn đỉnh đích.' };
       function isCell(a, matrix, i, j) { return a && a[0] === matrix && a[1] === i && a[2] === j; }
       for (const { key: matrix, cells } of matrices) {
         for (const { el, i, j } of cells) {
@@ -136,7 +136,7 @@
           const read = f.reads?.some(a => isCell(a, matrix, i, j));
           const write = f.writes?.some(a => isCell(a, matrix, i, j));
           el.className = write ? 'write' : read ? 'read' : isCell(f.target, matrix, i, j) ? 'target' : '';
-          el.title = cell(matrix, i, j) + ' = ' + value + (write ? ' · vừa ghi' : read ? ' · đang đọc' : '');
+          el.title = cell(matrix, i, j) + ' = ' + value + (write ? ' · vừa gán' : read ? ' · đang đọc' : isCell(f.target, matrix, i, j) ? ' · đang xét' : '');
         }
       }
       const routeEdges = f.route.slice(1).map((u, i) => f.route[i] + ',' + u);
@@ -149,14 +149,20 @@
         node.classList.toggle('visited', f.route.includes(u));
         node.classList.toggle('endpoint', !!f.endpoints?.includes(u));
         node.classList.toggle('focus', u === f.focus);
+        node.classList.toggle('source-picked', !building && u === source);
+        node.classList.toggle('target-picked', !building && u === target);
+        node.setAttribute('aria-pressed', String(!building && (u === source || u === target)));
       }
       role('filter-label').hidden = !building;
-      role('pick').textContent = source !== null && target === null ? 'Từ đỉnh ' + v(source) + '. Chọn đỉnh đích.' :
-        'Chọn đỉnh nguồn, rồi chọn đỉnh đích.';
-      role('route').textContent = !building && f.route.length && pos < frames.length - 1 ? 'Đường đang dựng   ' + E.routeText(f.route) : '';
+      role('pick').textContent = building ? 'Bấm hai đỉnh để chuyển sang truy vết.' : source === null ? 'Chọn đỉnh nguồn, rồi chọn đỉnh đích.' : target === null ? 'Nguồn: ' + v(source) + '. Chọn đỉnh đích.' : 'Nguồn: ' + v(source) + ' · Đích: ' + v(target) + '. Bấm một đỉnh để chọn cặp mới.';
+      role('route').textContent = f.route.length ? (building ? 'Đường qua k đang xét: ' : pos === frames.length - 1 ? 'Đường đi: ' : 'Đường đang dựng: ') + E.routeText(f.route) : '';
       role('statement').textContent = f.title;
       role('detail').textContent = f.detail;
       role('count').textContent = frames.length ? 'Bước ' + (pos + 1) + ' / ' + frames.length : '';
+      range.max = String(Math.max(1, frames.length));
+      range.value = String(pos + 1);
+      range.disabled = frames.length < 2;
+      range.setAttribute('aria-valuetext', frames.length ? 'Bước ' + (pos + 1) + ' trên ' + frames.length : 'Chưa chọn cặp đỉnh');
       prev.disabled = pos === 0;
       next.disabled = pos >= frames.length - 1;
       play.disabled = frames.length < 2;
@@ -222,9 +228,17 @@
     phase.addEventListener('change', reset);
     filter.addEventListener('change', () => {
       stop();
+      if (phase.value !== 'build') return;
       const step = frames[pos].step;
       frames = buildFrames(model, key, filter.checked);
-      pos = frames.findIndex(f => f.step >= step);
+      pos = 0;
+      while (pos + 1 < frames.length && frames[pos + 1].step <= step) pos++;
+      render();
+    });
+    range.addEventListener('input', () => {
+      stop();
+      if (!frames.length) return;
+      pos = Math.max(0, Math.min(frames.length - 1, Number(range.value) - 1));
       render();
     });
     speed.addEventListener('change', () => { if (timer !== null) start(); });
@@ -233,6 +247,7 @@
     next.addEventListener('click', () => { stop(); advance(1); });
     action('reset').addEventListener('click', reset);
     document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+    stop();
     render();
   }
   if (typeof module === 'object' && module.exports) {

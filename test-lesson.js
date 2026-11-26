@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const engine = require('./matrix-engine.js');
-const { buildFrames, traceFrames } = require('./lesson.js');
+const { buildFrames, traceFrames, mount } = require('./lesson.js');
 const read = file => fs.readFileSync(path.join(__dirname, file), 'utf8');
 const html = read('index.html');
 const javaN = read('FloydWarshallNextHop.java');
@@ -77,4 +77,70 @@ for (const key of ['N', 'M']) {
   if (key === 'N') assert.deepEqual(main.slice(1,-1).map(f => f.reads[0]), [['N',0,3],['N',1,3],['N',2,3]]);
   else assert.deepEqual(main.filter(f => f.entry).map(f => f.entry.depth), [0,1,2,3,2,3,1,2]);
 }
-console.log('PASS inline diagrams, Java input, 216 build comparisons, all 72 traces, matrix reads and recursive call order.');
+
+// Exercise the shipped controller with a minimal DOM and deterministic timers.
+function element(data = {}) {
+  const el = { dataset: data, textContent: '', value: '', checked: false, disabled: false,
+    hidden: false, className: '', style: {}, children: [], attrs: {}, listeners: {},
+    classList: { toggle(name, on) { const s = new Set(el.className.split(/\s+/).filter(Boolean)); if (on) s.add(name); else s.delete(name); el.className = [...s].join(' '); } },
+    setAttribute(name, value) { this.attrs[name] = String(value); },
+    addEventListener(name, fn) { this.listeners[name] = fn; },
+    emit(name, extra = {}) { this.listeners[name]?.({ target: this, preventDefault() {}, ...extra }); },
+    replaceChildren() { this.children = []; }, append(child) { this.children.push(child); }
+  }; return el;
+}
+function mockRoot(key) {
+  const roles = Object.fromEntries(['phase','filter','speed','range','filter-label','pick','route','statement','detail','count','calls-box','calls'].map(name => [name, element()]));
+  roles.phase.value = 'build'; roles.filter.checked = true; roles.speed.value = '1100';
+  const actions = Object.fromEntries(['play','prev','next','reset'].map(name => [name, element()]));
+  const nodes = Array.from({length:m.n}, (_,i)=>element({node:String(i)}));
+  const lines = edges.map(([i,j])=>element({edge:i+','+j}));
+  const mats = ['D',key].map(matrix => {
+    const cells = Array.from({length:m.n*m.n},(_,p)=>element({cell:Math.floor(p/m.n)+','+(p%m.n)}));
+    return {dataset:{matrix},querySelectorAll(){return cells;},cells};
+  });
+  const root = {dataset:{method:key}, querySelector(q) {const a=q.match(/\[data-(role|action)="([^"]+)"\]/); return (a[1]==='role'?roles:actions)[a[2]];},
+    querySelectorAll(q){return q==='[data-matrix]'?mats:q==='[data-node]'?nodes:lines;}};
+  return {root,roles,actions,nodes,lines,mats};
+}
+const saved = { document: globalThis.document, setInterval: globalThis.setInterval, clearInterval: globalThis.clearInterval };
+const timers = new Map(); let timerId = 0;
+globalThis.document = { createElement:()=>element(), addEventListener(){}, hidden:false };
+globalThis.setInterval = fn => {timers.set(++timerId,fn);return timerId;};
+globalThis.clearInterval = id => timers.delete(id);
+try {
+  for (const key of ['N','M']) {
+    const {root,roles,actions,nodes,lines,mats} = mockRoot(key);
+    mount(root,m);
+    assert.equal(mats[0].cells[5].textContent,'∞');
+    assert.equal(actions.prev.disabled,true);
+    actions.next.emit('click'); assert.equal(mats[0].cells[2].textContent,'7');
+    roles.filter.checked=false;roles.filter.emit('change');
+    assert.equal(roles.range.max,'218');
+    roles.range.value='218';roles.range.emit('input');
+    assert.equal(mats[0].cells[5].textContent,'14');
+    assert.equal(actions.next.disabled,true);
+    actions.play.emit('click');assert.equal(actions.play.textContent,'Tạm dừng');
+    assert.equal(roles.range.value,'1'); [...timers.values()].forEach(fn=>fn());
+    assert.equal(roles.range.value,'2');actions.play.emit('click');assert.equal(timers.size,0);
+    nodes[0].emit('click');assert.equal(roles.phase.value,'trace');assert.match(roles.pick.textContent,/Nguồn: 1/);
+    assert.equal(nodes[0].attrs['aria-pressed'],'true');
+    nodes[5].emit('keydown',{key:'Enter'});
+    assert.match(roles.pick.textContent,/Nguồn: 1 · Đích: 6/);
+    assert.equal(nodes[5].attrs['aria-pressed'],'true');
+    actions.play.emit('click');assert.equal(timers.size,0);
+    roles.range.value=roles.range.max;roles.range.emit('input');
+    assert.match(roles.statement.textContent,/1 → 2 → 3 → 4 → 5 → 6/);
+    assert.match(roles.detail.textContent,/14/);
+    assert.equal(lines.filter(e=>e.className.split(' ').includes('active')).length,5);
+    actions.prev.emit('click');assert.equal(actions.next.disabled,false);
+    nodes[5].emit('click');nodes[0].emit('click');assert.match(roles.detail.textContent,/Không có đường đi/);
+    nodes[2].emit('click');nodes[2].emit('click');assert.match(roles.detail.textContent,/Tổng trọng số 0/);
+    actions.reset.emit('click');assert.equal(roles.range.disabled,true);assert.match(roles.pick.textContent,/Chọn đỉnh nguồn/);
+    roles.phase.value='build';roles.phase.emit('change');assert.equal(roles.range.value,'1');
+    assert.equal(timers.size,0);
+  }
+} finally {
+  for (const [name,value] of Object.entries(saved)) { if (value === undefined) delete globalThis[name]; else globalThis[name]=value; }
+}
+console.log('PASS 5 initial matrices, 216 build comparisons, all 72 traces, Java listings and interactive controls.');

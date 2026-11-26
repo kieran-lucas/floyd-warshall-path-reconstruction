@@ -4,17 +4,17 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Truy vết đường đi với Floyd–Warshall</title>
 <meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ sáu đỉnh và mã Java.">
-<link rel="stylesheet" href="lesson.css?v=six1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
+<link rel="stylesheet" href="lesson.css?v=audit1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=audit1"></script>
 </head>
 <body><main>
 <header><h1>Truy vết đường đi với Floyd–Warshall</h1></header>
 <section id="problem"><h2>1. Bài toán</h2>
 <p>Dijkstra là thuật toán thường dùng để tìm đường đi ngắn nhất trên đồ thị có trọng số không âm. Chẳng hạn, chạy Dijkstra từ đỉnh 1 cho ta khoảng cách từ 1 đến các đỉnh còn lại. Kết quả ấy dùng được cho cả hai câu hỏi 1 → 3 và 1 → 4. Nhưng nếu đổi nguồn sang đỉnh 2, ta có thể phải chạy lại thuật toán.</p>
-<p>Khi cần tìm đường đi giữa hai đỉnh bất kỳ, Floyd–Warshall cho phép tính trước khoảng cách ngắn nhất giữa mọi cặp đỉnh trong một lần chạy. Phiên bản cơ bản của thuật toán trả về ma trận khoảng cách; nếu muốn in ra dãy đỉnh của đường đi, ta cần khôi phục thông tin ấy. Ta sẽ tìm hiểu hai cách bổ sung ma trận lưu vết ngay trong quá trình tính Floyd.</p>
+<p>Khi có nhiều truy vấn với các đỉnh nguồn khác nhau, Floyd–Warshall cho phép tính trước khoảng cách ngắn nhất giữa mọi cặp đỉnh trong một lần chạy. Phiên bản cơ bản của thuật toán trả về ma trận khoảng cách; nếu muốn in ra dãy đỉnh của đường đi, ta cần khôi phục thông tin ấy. Ta sẽ tìm hiểu hai cách bổ sung ma trận lưu vết ngay trong quá trình tính Floyd. Floyd cũng xử lý được cạnh có trọng số âm; nếu một cặp đỉnh đi qua được chu trình âm thì cặp đó không có đường đi ngắn nhất hữu hạn.</p>
 </section>
 <section id="floyd"><h2>2. Ma trận khoảng cách của Floyd–Warshall</h2>
-<p>Xét đồ thị có hướng gồm 6 đỉnh dưới đây. Gọi D là ma trận khoảng cách 6 × 6, với hàng là nguồn và cột là đích. Ban đầu mỗi ô mang trọng số của cạnh trực tiếp. Đường chéo bằng 0, còn ∞ nghĩa là hai đỉnh chưa có cạnh nối theo chiều đó.</p>
-<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 480 238">
+<p>Xét đồ thị có hướng gồm 6 đỉnh dưới đây. Gọi D là ma trận khoảng cách 6 × 6, với hàng là nguồn và cột là đích. Ban đầu, với hai đỉnh khác nhau, mỗi ô mang trọng số nhỏ nhất của cạnh trực tiếp (nếu có). Đường chéo bằng 0 trong đồ thị mẫu, còn ∞ nghĩa là chưa có cạnh nối theo chiều đó.</p>
+<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng — 6 đỉnh</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 480 238">
 <title id="graph-title-initial">Đồ thị có hướng gồm 6 đỉnh. Các cạnh và trọng số: 1 → 2 (4), 1 → 3 (15), 1 → 4 (20), 2 → 3 (3), 2 → 4 (10), 3 → 4 (2), 3 → 6 (14), 4 → 5 (2), 4 → 6 (10), 5 → 6 (3).</title>
 <defs>
               <marker id="arrow-initial" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
@@ -38,16 +38,21 @@
 <g data-node="5" transform="translate(450 115)"><circle r="17"/><text>6</text></g>
 </svg></figure></div>
 
-<p>Cạnh 1 → 3 có trọng số 15. Đi qua 2 chỉ tốn 4 + 3 = 7, nên Floyd đổi <code>D[1][3]</code> từ 15 thành 7. Cũng ở lượt này, đường 1 → 2 → 4 tốn 4 + 10 = 14, ngắn hơn cạnh trực tiếp có trọng số 20. Sang lượt xét đỉnh 3, ghép đường vừa tìm được từ 1 đến 3 với cạnh 3 → 4 chỉ tốn 7 + 2 = 9. Ô <code>D[1][4]</code> giảm từ 14 xuống 9.</p>
+<p>Hai ô và hai cạnh màu xanh biểu thị đoạn đường qua đỉnh 2 đang xét; ô tím là khoảng cách cần so sánh. Cạnh 1 → 3 có trọng số 15. Đi qua 2 chỉ tốn 4 + 3 = 7, nên Floyd đổi <code>D[1][3]</code> từ 15 thành 7. Cũng ở lượt này, đường 1 → 2 → 4 tốn 4 + 10 = 14, ngắn hơn cạnh trực tiếp có trọng số 20. Sang lượt xét đỉnh 3, ghép đường vừa tìm được từ 1 đến 3 với cạnh 3 → 4 chỉ tốn 7 + 2 = 9. Ô <code>D[1][4]</code> giảm từ 14 xuống 9.</p>
 <p>Sau lượt xét k, <code>D[i][j]</code> là khoảng cách ngắn nhất từ i đến j khi chỉ cho phép các đỉnh 1, 2, …, k làm trung gian. Hai đầu mút i, j không bị giới hạn trong tập này. Khi xét thêm k, ta so sánh đường đang có với đường ghép từ i đến k rồi từ k đến j. Hai đoạn này có thể đã đi qua các đỉnh trung gian được xét ở những lượt trước.</p>
 <pre class="formula"><code>D[i][j] = min(D[i][j], D[i][k] + D[k][j])</code></pre>
+<pre><code>for k = 1 .. V:
+    for i = 1 .. V:
+        for j = 1 .. V:
+            if D[i][k] != ∞ and D[k][j] != ∞:
+                D[i][j] = min(D[i][j], D[i][k] + D[k][j])</code></pre>
 </section>
-<section id="methods"><h2>3. Các cách lưu vết cho Floyd–Warshall</h2>
+<section id="methods"><span id="code" aria-hidden="true"></span><h2>3. Các cách lưu vết cho Floyd–Warshall</h2>
 <p>Sau khi chạy Floyd, <code>D[1][4] = 9</code>. Làm thế nào để từ kết quả đó khôi phục được đường đi 1 → 2 → 3 → 4? Hãy trở lại lúc Floyd ghép đường từ 1 tới 3 với cạnh 3 → 4. Ta có thể ghi nhớ bước đầu của đường mới, hoặc đỉnh trung gian vừa dùng để nối hai đoạn. Hai cách lưu thông tin này dẫn đến hai cách truy vết khác nhau.</p>
 
 <div id="next-hop"><h3>Cách 1: Ma trận bước kế tiếp (Next-Hop Matrix)</h3>
 <p>Giả sử ta viết các đỉnh lần lượt từ nguồn đến đích. Viết 1 xong, ta cần biết đỉnh nào đứng ngay sau 1. Đường tới 4 bắt đầu bằng đoạn từ 1 tới 3, mà đoạn này đi qua 2 trước. Vậy đỉnh tiếp theo cần viết là 2. Đứng ở 2, ta lại cần biết phải đi sang đâu để tới 4.</p>
-<p>Ta sẽ lập một ma trận bước kế tiếp, đặt tên là <code>next</code>, để có thể tra bước đi đầu tiên cho bất kỳ cặp đỉnh nào. Trên hình, ma trận này được ký hiệu là N. Với cạnh trực tiếp i → j, ban đầu ta ghi <code>next[i][j] = j</code>. Các ô chưa có đường đi được gán −1; trên đường chéo, <code>next[i][i] = i</code>. Sau đó, mỗi khi Floyd tìm được đường ngắn hơn qua k, bước đầu của đường từ i tới j cũng là bước đầu của đoạn từ i tới k.</p>
+<p>Ta sẽ lập một ma trận bước kế tiếp, đặt tên là <code>next</code>, để có thể tra bước đi đầu tiên cho bất kỳ cặp đỉnh nào. Trên hình, ma trận này được ký hiệu là N. Với cạnh trực tiếp i → j, ban đầu ta ghi <code>next[i][j] = j</code>. Các ô chưa có cạnh trực tiếp được gán −1; trên đường chéo, <code>next[i][i] = i</code>. Sau đó, mỗi khi Floyd tìm được đường ngắn hơn qua k, bước đầu của đường từ i tới j cũng là bước đầu của đoạn từ i tới k.</p>
 <pre id="next-code"><code><span class="kw">int</span>[][] next = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
 <span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
     <span class="kw">Arrays</span>.fill(next[i], -1);
@@ -80,7 +85,7 @@
     }
     <span class="kw">return</span> path;
 }</code></pre>
-<p class="demo-intro">Trong hình dưới đây, chọn hai đỉnh bất kỳ để truy vết. Chẳng hạn, chọn đỉnh 1 rồi đỉnh 6 để xem N được đọc theo cột 6. Chuyển sang giai đoạn xây dựng ma trận để theo dõi N thay đổi khi Floyd tìm được đường ngắn hơn.</p>
+<p class="demo-intro">Trong hình dưới đây, bấm Phát để xem Floyd xây dựng D và N. Bấm hai đỉnh trên đồ thị sẽ tự chuyển sang truy vết từ các ma trận đã tính xong. Chẳng hạn, chọn 1 rồi 6 để đọc cột 6 của N; chọn 6 rồi 1 để xem trường hợp không có đường đi.</p>
 <div id="simulation"><div class="demo" data-method="N" id="demo-n">
   <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
     <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ hiện bước giảm khoảng cách</label></div>
@@ -101,20 +106,21 @@
 <g data-edge="3,4"><path d="M256.5 105.6 L326.8 65.4"/><text x="292.5" y="75">2</text></g>
 <g data-edge="3,5"><path d="M259 115 L429 115"/><text x="345" y="105">10</text></g>
 <g data-edge="4,5"><path d="M361.5 64.4 L431.8 104.6"/><text x="397.5" y="75">3</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(30 115)"><circle r="17"/><text>1</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(135 55)"><circle r="17"/><text>2</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(135 180)"><circle r="17"/><text>3</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(240 115)"><circle r="17"/><text>4</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 5" data-node="4" transform="translate(345 55)"><circle r="17"/><text>5</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 6" data-node="5" transform="translate(450 115)"><circle r="17"/><text>6</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(30 115)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>1</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(135 55)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>2</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(135 180)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>3</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(240 115)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>4</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 5" data-node="4" transform="translate(345 55)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>5</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 6" data-node="5" transform="translate(450 115)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>6</text></g>
 </svg></figure>
-    <p class="pick" data-role="pick">Chọn đỉnh nguồn, rồi chọn đỉnh đích.</p>
+    <p class="pick" data-role="pick" aria-live="polite">Chọn đỉnh nguồn, rồi chọn đỉnh đích.</p>
     <p class="route" data-role="route"></p>
   </div></div>
-  <p class="legend"><span class="read-key"></span>Ô đang đọc <span class="write-key"></span>Ô vừa ghi</p>
+  <p class="legend"><span class="read-key"></span>Ô đang đọc <span class="write-key"></span>Ô vừa gán <span class="target-key"></span>Ô khoảng cách đang xét</p>
   <div class="feedback"><p data-role="statement" aria-live="polite" aria-atomic="true">Trạng thái ban đầu.</p><p class="detail" data-role="detail"></p></div>
   <div class="player"><button type="button" data-action="play">Phát</button><button type="button" data-action="prev" aria-label="Lùi một bước">← Lùi</button><button type="button" data-action="next" aria-label="Tiến một bước">Tiến →</button><button type="button" data-action="reset">Đặt lại</button>
     <label>Tốc độ <select data-role="speed"><option value="2200">0,5×</option><option value="1100" selected>1×</option><option value="550">2×</option></select></label><span data-role="count"></span></div>
+  <div class="timeline"><label>Bước mô phỏng <input type="range" data-role="range" min="1" max="1" value="1" step="1" aria-label="Bước mô phỏng"></label></div>
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div></div>
 <div class="full-source" id="code-n">
@@ -253,7 +259,7 @@ N = [1, 2, 3, 4, 5, 6]</code></pre>
     appendSegment(i, k, path);
     appendSegment(k, j, path);
 }</code></pre>
-<p class="demo-intro">Chọn lại hai đỉnh 1 và 6. Lần này, theo dõi các ô M được đọc và danh sách lời gọi đệ quy để thấy cách đường đi được chia nhỏ rồi ghép lại.</p>
+<p class="demo-intro">Tương tự, bấm Phát để xem D và M được xây dựng. Chọn đỉnh 1 rồi đỉnh 6 để theo dõi các ô M được đọc và các lời gọi đệ quy. Mỗi đoạn trực tiếp được ghép vào kết quả theo thứ tự từ trái sang phải.</p>
 <div class="demo" data-method="M" id="demo-m">
   <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
     <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ hiện bước giảm khoảng cách</label></div>
@@ -275,20 +281,21 @@ N = [1, 2, 3, 4, 5, 6]</code></pre>
 <g data-edge="3,4"><path d="M256.5 105.6 L326.8 65.4"/><text x="292.5" y="75">2</text></g>
 <g data-edge="3,5"><path d="M259 115 L429 115"/><text x="345" y="105">10</text></g>
 <g data-edge="4,5"><path d="M361.5 64.4 L431.8 104.6"/><text x="397.5" y="75">3</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(30 115)"><circle r="17"/><text>1</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(135 55)"><circle r="17"/><text>2</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(135 180)"><circle r="17"/><text>3</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(240 115)"><circle r="17"/><text>4</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 5" data-node="4" transform="translate(345 55)"><circle r="17"/><text>5</text></g>
-<g role="button" tabindex="0" aria-label="Chọn đỉnh 6" data-node="5" transform="translate(450 115)"><circle r="17"/><text>6</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(30 115)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>1</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(135 55)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>2</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(135 180)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>3</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(240 115)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>4</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 5" data-node="4" transform="translate(345 55)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>5</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 6" data-node="5" transform="translate(450 115)"><circle class="node-hit" r="30"/><circle class="node-ring" r="22"/><circle class="node-face" r="17"/><text>6</text></g>
 </svg></figure>
-    <p class="pick" data-role="pick">Chọn đỉnh nguồn, rồi chọn đỉnh đích.</p>
+    <p class="pick" data-role="pick" aria-live="polite">Chọn đỉnh nguồn, rồi chọn đỉnh đích.</p>
     <p class="route" data-role="route"></p>
   </div></div>
-  <p class="legend"><span class="read-key"></span>Ô đang đọc <span class="write-key"></span>Ô vừa ghi</p>
+  <p class="legend"><span class="read-key"></span>Ô đang đọc <span class="write-key"></span>Ô vừa gán <span class="target-key"></span>Ô khoảng cách đang xét</p>
   <div class="feedback"><p data-role="statement" aria-live="polite" aria-atomic="true">Trạng thái ban đầu.</p><p class="detail" data-role="detail"></p></div>
   <div class="player"><button type="button" data-action="play">Phát</button><button type="button" data-action="prev" aria-label="Lùi một bước">← Lùi</button><button type="button" data-action="next" aria-label="Tiến một bước">Tiến →</button><button type="button" data-action="reset">Đặt lại</button>
     <label>Tốc độ <select data-role="speed"><option value="2200">0,5×</option><option value="1100" selected>1×</option><option value="550">2×</option></select></label><span data-role="count"></span></div>
+  <div class="timeline"><label>Bước mô phỏng <input type="range" data-role="range" min="1" max="1" value="1" step="1" aria-label="Bước mô phỏng"></label></div>
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div>
 <div class="full-source" id="code-m">
@@ -423,7 +430,7 @@ M = [1, 2, 3, 4, 5, 6]</code></pre>
 <g class="compare-leaf"><rect x="277" y="67" width="96" height="37" rx="4"/><rect x="7" y="129" width="96" height="37" rx="4"/><rect x="125" y="129" width="96" height="37" rx="4"/><text x="325" y="79">(3, 4)</text><text class="compare-sub" x="325" y="93">cạnh gốc</text><text x="55" y="141">(1, 2)</text><text class="compare-sub" x="55" y="155">cạnh gốc</text><text x="173" y="141">(2, 3)</text><text class="compare-sub" x="173" y="155">cạnh gốc</text></g></svg>
 <p>Đọc M, dựng đoạn trái trước rồi dựng đoạn phải.</p></figure>
 <div class="compare-result">Cùng một đường đi: <strong>1 → 2 → 3 → 4</strong> · Tổng trọng số: 9</div></div>
-<p>Hai cách cùng khôi phục một đường đi ngắn nhất, nhưng khác nhau ở thông tin cần đọc và cách tổ chức các bước truy vết. Khi có nhiều đường đồng hạng, điều kiện <code>via &lt; d[i][j]</code> giữ lựa chọn đã có trước đó.</p>
+<p>Hai cách cùng khôi phục một đường đi ngắn nhất, nhưng khác nhau ở thông tin cần đọc và cách tổ chức các bước truy vết. Khi một đường mới có cùng độ dài với đường đang lưu, điều kiện <code>via &lt; d[i][j]</code> không cập nhật ô tương ứng. Hai phương pháp chỉ khôi phục một đường ngắn nhất, không liệt kê mọi đường đồng hạng.</p>
 </section>
 
 <section id="trade-offs"><h2>5. Ưu và nhược điểm của hai phương pháp</h2>
@@ -439,7 +446,7 @@ M = [1, 2, 3, 4, 5, 6]</code></pre>
 <tr><th scope="row">Truy vết toàn bộ đường đi</th><td>Θ(L + 1)</td><td>Θ(L + 1)</td></tr>
 <tr><th scope="row">Bộ nhớ phụ khi truy vết</th><td>Θ(1)</td><td>O(L), do ngăn xếp đệ quy</td></tr>
 </tbody></table>
-<p>Chi phí trên xét cặp nguồn–đích đã được xác định có đường đi ngắn nhất hữu hạn, không tính bộ nhớ dành cho danh sách kết quả (Θ(L + 1) ở cả hai cách). Trong hai chương trình Java ở trên, hàm <code>distance</code> còn duyệt V đỉnh để kiểm tra chu trình âm, nên một truy vấn đầy đủ mất O(V + L + 1) thời gian.</p>
+<p>Chi phí trên xét cặp nguồn–đích khác nhau đã được xác định có đường đi ngắn nhất hữu hạn, không tính bộ nhớ dành cho danh sách kết quả (Θ(L + 1) ở cả hai cách). Trong hai chương trình Java ở trên, hàm <code>distance</code> còn duyệt V đỉnh để kiểm tra chu trình âm, nên một truy vấn đầy đủ mất O(V + L + 1) thời gian.</p>
 
 <h3>5.2. Sự khác biệt khi truy vết</h3>
 <p><strong>Next-Hop Matrix.</strong> Với mỗi cạnh của đường đi, thuật toán chỉ cần đọc một ô N và chuyển sang đỉnh tiếp theo. Một đường có L cạnh tương ứng với L lần tra ma trận. Cách này thuận tiện khi cần in các đỉnh theo thứ tự, xác định ngay bước đi tiếp theo hoặc thực hiện nhiều truy vấn. Đổi lại, N chỉ lưu bước đầu tiên của đường đã chọn; nó không trực tiếp biểu diễn các điểm chia được tạo ra trong quá trình Floyd–Warshall.</p>
@@ -447,7 +454,7 @@ M = [1, 2, 3, 4, 5, 6]</code></pre>
 <p>Ví dụ, với đường 1 → 2 → 3 → 4 ở phần 4, Next-Hop đọc ba ô N, còn Intermediate đọc năm ô M: hai ô chứa điểm chia và ba ô ứng với cạnh trực tiếp. Đây là số bước của cơ chế truy vết, không phải kết quả đo thời gian chạy.</p>
 
 <h3>5.3. Nên sử dụng phương pháp nào?</h3>
-<p>Nếu mục tiêu là khôi phục đường đi để sử dụng trong chương trình, Next-Hop thường là lựa chọn thuận tiện hơn nhờ truy vết tuần tự và không cần đệ quy. Intermediate có giá trị khi muốn biểu diễn đường đi dưới dạng các bài toán con, đặc biệt trong việc minh họa tư tưởng quy hoạch động. Cả hai đều giữ nguyên bậc độ phức tạp của Floyd–Warshall và chỉ lưu một đường đi được chọn khi có nhiều đường ngắn nhất đồng hạng.</p>
+<p>Nếu mục tiêu là khôi phục đường đi để sử dụng trong chương trình, Next-Hop thường là lựa chọn thuận tiện hơn nhờ truy vết tuần tự và không cần đệ quy. Intermediate có giá trị khi muốn biểu diễn đường đi dưới dạng các bài toán con, đặc biệt trong việc minh họa tư tưởng quy hoạch động. Cả hai đều giữ nguyên bậc độ phức tạp của Floyd–Warshall. Nếu cần liệt kê mọi đường ngắn nhất đồng hạng, phải mở rộng cách lưu vết để giữ nhiều lựa chọn.</p>
 </section>
 
 </main></body></html>
