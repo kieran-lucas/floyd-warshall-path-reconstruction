@@ -12,7 +12,7 @@
       step: 0, state: model.frames[0].state, route: [],
       title: 'Khởi tạo D và ' + key + '.',
       detail: key === 'N' ? 'Với cạnh i → j, N[i][j] = j. Trên đường chéo, N[i][i] = i.' :
-        'Mọi ô M bằng −1. Các đường đã biết hiện chỉ gồm cạnh trực tiếp hoặc một đỉnh.'
+        'Chưa có đỉnh trung gian. Mọi ô M bằng −1.'
     };
     const frames = [first];
     for (const snapshot of model.frames.slice(1)) {
@@ -44,7 +44,7 @@
     }
     frames.push({
       step: model.frames.length, state: model.final, route: [], title: 'Đã xét đủ ' + model.n + ' đỉnh trung gian.',
-      detail: 'Hai ma trận đã hoàn tất. Nhấp đỉnh nguồn rồi đỉnh đích để đọc ' + key + '.'
+      detail: ''
     });
     return frames;
   }
@@ -127,8 +127,7 @@
     function render() {
       const building = phase.value === 'build';
       const f = frames[pos] || { state: model.final, route: [], focus: source,
-        title: source === null ? 'Chọn đỉnh nguồn trên đồ thị.' : 'Nguồn ' + v(source) + ' đã chọn. Nhấp đỉnh đích.',
-        detail: 'Ma trận D và ' + key + ' đang hiển thị kết quả cuối của Floyd.' };
+        title: 'D và ' + key + ' sau khi chạy Floyd.', detail: '' };
       function isCell(a, matrix, i, j) { return a && a[0] === matrix && a[1] === i && a[2] === j; }
       for (const { key: matrix, cells } of matrices) {
         for (const { el, i, j } of cells) {
@@ -152,9 +151,9 @@
         node.classList.toggle('focus', u === f.focus);
       }
       role('filter-label').hidden = !building;
-      role('pick').textContent = !building && source !== null && target === null ? 'Nguồn ' + v(source) + ' · Nhấp đỉnh đích (có thể chọn lại ' + v(source) + ').' :
-        'Nhấp một đỉnh làm nguồn, rồi nhấp đỉnh đích để truy vết.';
-      role('route').textContent = !building && f.route.length ? 'Đường đang dựng   ' + E.routeText(f.route) : '';
+      role('pick').textContent = source !== null && target === null ? 'Từ đỉnh ' + v(source) + '. Chọn đỉnh đích.' :
+        'Chọn đỉnh nguồn, rồi chọn đỉnh đích.';
+      role('route').textContent = !building && f.route.length && pos < frames.length - 1 ? 'Đường đang dựng   ' + E.routeText(f.route) : '';
       role('statement').textContent = f.title;
       role('detail').textContent = f.detail;
       role('count').textContent = frames.length ? 'Bước ' + (pos + 1) + ' / ' + frames.length : '';
@@ -162,7 +161,7 @@
       next.disabled = pos >= frames.length - 1;
       play.disabled = frames.length < 2;
       const showLog = !building && key === 'M' && frames.length > 0;
-      role('calls-box').hidden = !showLog;
+      if (key === 'M') role('calls-box').hidden = !showLog;
       if (showLog) {
         const entries = frames.slice(0, pos + 1).map(frame => frame.entry).filter(Boolean);
         const list = role('calls');

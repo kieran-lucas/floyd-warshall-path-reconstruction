@@ -14,8 +14,7 @@ h1 { font-size: clamp(25px, 3.9vw, 34px); letter-spacing: -.7px; line-height: 1.
 section { margin: 0 0 42px; scroll-margin: 16px; }
 section:last-child { margin-bottom: 8px; }
 h2 { font-size: 24px; letter-spacing: -.3px; line-height: 1.35; font-weight: 700; margin: 0 0 6px; }
-h3, h4 { font: 600 15px/1.5 var(--sans); margin: 18px 0 9px; }
-h4 { font-size: 13px; }
+h3 { font: 600 15px/1.5 var(--sans); margin: 18px 0 9px; }
 p { max-width: 93ch; margin: 0 0 10px; color: var(--prose); font: 13.5px/1.75 var(--sans); }
 a { color: var(--blue); text-underline-offset: 3px; }
 code { font: 12px/1.5 var(--mono); background: #f0f3f7; color: #354457; border: 1px solid #e4e9ef; border-radius: 3px; padding: 1px 3px; overflow-wrap: anywhere; }
@@ -79,7 +78,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 .feedback { border-top: 1px solid var(--line); padding: 8px 14px; }
 .feedback p { margin: 0; }
 .feedback [data-role="statement"] { font: 600 13px/1.65 var(--mono); color: var(--blue); }
-.calls h4 { margin: 5px 0; }
+.calls h4 { margin: 5px 0; font-size: 13px; }
 .calls ol { margin: 0; padding-left: 30px; font: 11.5px/1.65 var(--mono); color: var(--prose); }
 .calls li:last-child { color: var(--blue); font-weight: 600; }
 .compare { width: 100%; border-collapse: collapse; font: 13px/1.6 var(--sans); margin: 12px 0; text-align: left; }
@@ -113,3 +112,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
   table, .views { break-inside: avoid; }
   pre { white-space: pre-wrap; overflow: visible; }
 }
+
+.implementation { margin: 6px 0 16px; }
+.implementation summary { width: fit-content; cursor: pointer; color: var(--blue); font-size: 13px; }
+.implementation summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
