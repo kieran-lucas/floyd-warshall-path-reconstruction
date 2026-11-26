@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Floyd–Warshall · Truy vết đường đi ngắn nhất</title>
+<meta name="description" content="Năm phương án truy vết Floyd–Warshall, bao gồm liệt kê tất cả đường ngắn nhất đơn. Mô phỏng thuật toán từng bước.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{--ink:#17191c;--muted:#666c74;--line:#dce0e5;--soft:#f5f6f7;--accent:#315bc3;--pale:#e9efff;--paper:#fff;--mono:'JetBrains Mono',Consolas,monospace;--sans:'Space Grotesk',Arial,sans-serif}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--paper);font-family:var(--sans);font-size:16px;line-height:1.7}a{color:inherit;text-underline-offset:3px}a:hover{color:var(--accent)}button,select,input{font:inherit}button,select{cursor:pointer}button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button:disabled{opacity:.35;cursor:default}.top{border-bottom:1px solid var(--line)}.top-inner{max-width:900px;margin:auto;display:flex;align-items:center;justify-content:space-between;padding:16px 24px}.brand,.top-right,.eyebrow,.section-index,.mini-label,.meta,.counter,.tag,.small,.matrix-note,footer,.code-header{font-family:var(--mono);font-size:11px;letter-spacing:.025em}.brand{font-weight:600;text-decoration:none;font-size:12px}.brand span,.top-right,.eyebrow,.section-index,.mini-label,.small,.matrix-note{color:var(--muted)}.dot{display:inline-block;border-radius:50%;width:7px;height:7px;background:var(--accent);margin-left:5px}main{max-width:900px;padding:0 24px;margin:auto}.hero{padding:67px 0 33px}.eyebrow{font-size:11px;letter-spacing:.08em}.hero h1{font-size:clamp(42px,7vw,76px);line-height:1.04;letter-spacing:-.055em;margin:18px 0 24px;font-weight:700}.muted{color:#777d84}.lead{font-size:clamp(18px,2.5vw,23px);line-height:1.45;color:#444a51;max-width:680px}.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}.meta span{border:1px solid var(--line);padding:4px 9px;color:#535962}.toc{display:flex;flex-wrap:wrap;gap:8px 19px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:13px 0;font-size:13px}.toc a{text-decoration:none;color:#555b64}.toc a:hover{text-decoration:underline;color:var(--accent)}section{padding:45px 0 30px;border-bottom:1px solid var(--line)}.section-index{color:var(--accent);font-weight:500;font-size:12px;letter-spacing:.06em}h2{font-size:clamp(25px,4vw,35px);line-height:1.18;letter-spacing:-.035em;margin:11px 0 21px}h3{font-size:21px;line-height:1.3;margin:22px 0 10px}p{margin:13px 0 18px}code{font:500 .88em var(--mono);background:#f0f2f4;padding:2px 4px;border-radius:3px;overflow-wrap:anywhere}pre{font-family:var(--mono);line-height:1.65;font-size:12px;padding:18px 20px;overflow:auto;background:#f4f5f7;border:1px solid var(--line);border-radius:5px;margin:18px 0}pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal;font-weight:400}.kw{color:#244eaf;font-weight:600}.focus-code{background:#e0e7fb;color:#203d8d}.contrast{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:5px;margin:24px 0}.contrast>div{padding:20px 23px;min-width:0}.contrast>div+div{border-left:1px solid var(--line)}.contrast p{margin:10px 0 0;font-size:14px;color:var(--muted)}.concept-grid{display:grid;gap:5px;padding:13px 0;font:13px var(--mono)}.concept-row{display:grid;grid-template-columns:30px 23px 1fr;align-items:center;gap:5px}.concept-row b{border:1px solid #8d98a8;text-align:center;border-radius:50%;width:27px;line-height:25px}.concept-row.faded{opacity:.28}.compact>div{display:flex;flex-direction:column;gap:12px}.big-num{font-size:37px;line-height:1}.path-line{display:flex;gap:12px;align-items:center;font:22px var(--mono)}.path-line b{background:#f1f3f5;min-width:33px;text-align:center;padding:2px 6px}.formula{padding:16px 18px;background:var(--soft);border-left:3px solid var(--accent);font:clamp(12px,2.2vw,16px) var(--mono);overflow:auto;margin:18px 0;white-space:nowrap}.diagram-wrap{border:1px solid var(--line);border-radius:5px;max-width:720px;margin:18px auto;padding:10px}.diagram-wrap svg{display:block;width:100%;height:auto}.diag-old{fill:none;stroke:#b1b7bf;stroke-dasharray:5 5;stroke-width:2;color:#b1b7bf}.diag-new{fill:none;stroke:var(--accent);stroke-width:2.5;color:var(--accent)}.diag-node circle{fill:white;stroke:#313740;stroke-width:1.5}.diag-node text{text-anchor:middle;font:600 17px var(--mono)}.diag-caption{text-anchor:middle;font:12px var(--mono);fill:#666c74}.method{border-top:1px solid var(--line);padding:24px 0 12px;margin-top:22px}.method-title{display:flex;align-items:center;gap:12px}.method-title>span:first-child{font:12px var(--mono);color:var(--muted)}.method-title h3{margin:0;flex:1}.tag{border:1px solid var(--line);padding:3px 7px;white-space:nowrap;color:var(--muted)}.method-figure{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);padding:19px 12px;margin:20px 0;font:14px var(--mono)}.method-figure>span{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid #929aa5}.method-figure>span.accent-node{background:var(--accent);color:white;border-color:var(--accent)}.method-figure i{font-style:normal;color:var(--muted)}.method-figure small{flex:0 0 100%;text-align:center;color:var(--accent);margin-top:4px}.note{background:var(--soft);border:1px solid var(--line);padding:15px 18px;margin:23px 0;font-size:14px}.lab{margin:24px 0 8px;border:1px solid #c9ced5;border-radius:7px;padding:19px;background:white}.lab-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}.lab-head strong{display:block;font-size:19px;line-height:1.5}.counter{color:var(--muted);white-space:nowrap}.graph-box{background:#fafbfc;border:1px solid var(--line);border-radius:5px;overflow:hidden}.graph-box svg{display:block;width:100%;height:auto;max-height:360px}.edge{fill:none;stroke:#aeb6c1;stroke-width:1.65}.edge.active{stroke:var(--accent);stroke-width:3}.edge.old{stroke:#929aa8;stroke-width:2.5;stroke-dasharray:5 4}.weight{font:600 14px var(--mono);fill:#515966;paint-order:stroke;stroke:#fafbfc;stroke-width:6px;stroke-linejoin:round;text-anchor:middle;dominant-baseline:middle}.weight.active{fill:var(--accent)}.vertex{fill:white;stroke:#535e6e;stroke-width:1.6}.vertex.hot{fill:var(--pale);stroke:var(--accent);stroke-width:2.5}.vertex.middle{fill:var(--accent);stroke:var(--accent)}.vertex-label{font:600 17px var(--mono);fill:#252d36;text-anchor:middle;dominant-baseline:central}.vertex-label.middle{fill:white}.graph-role{font:11px var(--mono);fill:var(--accent);text-anchor:middle;paint-order:stroke;stroke:#fafbfc;stroke-width:4px}.legend{display:flex;gap:9px 15px;flex-wrap:wrap;margin:12px 0;color:var(--muted);font-size:12px}.legend span{display:flex;gap:5px;align-items:center}.swatch{height:9px;width:13px;border-radius:2px;display:inline-block}.blue{background:var(--accent)}.grey{background:#aeb6c1}.pale{background:var(--pale);border:1px solid #c4d2fa}.solid{background:var(--accent)}.toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:13px 0 8px}.toolbar button,.speed select,.query-select select{border:1px solid #cbd1d9;border-radius:4px;background:white;color:var(--ink);min-height:35px;padding:5px 10px;font-size:13px;font-weight:500}.toolbar button:hover:not(:disabled),.tabs button:hover{border-color:var(--accent);color:var(--accent)}.toolbar .primary{background:var(--ink);border-color:var(--ink);color:white;min-width:91px}.toolbar .primary:hover:not(:disabled){background:var(--accent);color:white}.speed{display:flex;align-items:center;gap:6px;margin-left:auto;color:var(--muted);font-size:12px}.speed select{padding:4px 7px}.toolbar .counter{margin-left:5px}input[type=range]{width:100%;accent-color:var(--accent);margin:6px 0 12px;cursor:pointer}.options{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.options label{display:flex;gap:7px;align-items:center;cursor:pointer}.options input{accent-color:var(--accent)}.readout{min-height:112px;margin:15px 0 19px;padding:13px 15px;background:var(--soft);border-left:3px solid var(--accent);font-size:14px}.readout strong{display:block;margin-bottom:5px}.readout .calc{font:13px var(--mono);margin:6px 0;overflow-wrap:anywhere}.readout .status{color:var(--accent);font-weight:600}.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:13px}.tabs button{border:1px solid transparent;border-bottom:2px solid transparent;background:white;color:#666c74;font:500 11px var(--mono);padding:8px 10px;cursor:pointer}.tabs button[aria-selected=true]{border-bottom-color:var(--accent);color:var(--accent)}.matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px}.matrix-title{font-size:13px;font-weight:600;margin:0 0 8px}.matrix-scroll{overflow-x:auto}.matrix{border-collapse:collapse;width:100%;table-layout:fixed;font:12px var(--mono);text-align:center}.matrix th,.matrix td{border:1px solid var(--line);height:34px;padding:2px 0;min-width:27px}.matrix th{color:#7b828c;background:#f4f5f7;font-weight:500}.matrix td{transition:background .16s,color .16s;position:relative}.matrix td.empty{color:#969da7}.matrix td.ref{background:var(--pale);color:#1f4bab}.matrix td.target{background:#315bc3;color:white;font-weight:600}.matrix td.axis{box-shadow:inset 0 0 0 1px #9ab2ef}.matrix-note{font-size:11px;line-height:1.7;margin:13px 0 0}.query-select{display:flex;gap:10px;font-size:12px;align-items:center}.query-select label{display:flex;align-items:center;gap:6px;color:var(--muted)}.query-select select{min-width:43px}.result-row{display:grid;grid-template-columns:1fr 2.5fr;border:1px solid var(--line);border-radius:5px;margin-bottom:14px}.result-row>div{padding:12px 13px;min-width:0}.result-row>div+div{border-left:1px solid var(--line)}.result-row strong{display:block;font:600 clamp(13px,2vw,20px) var(--mono);overflow-wrap:anywhere;margin-top:4px}.trace-graph-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px;font:11px var(--mono);color:var(--accent)}.trace-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px}.trace-card{border:1px solid var(--line);padding:9px;border-radius:5px;min-width:0;cursor:pointer;background:white}.trace-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.trace-card:focus-visible{outline:2px solid var(--accent)}.trace-card h4{font-size:14px;margin:0 0 3px;line-height:1.3}.trace-card .direction{font:10px var(--mono);color:var(--muted);margin-bottom:9px}.trace-card .matrix{font-size:10px}.trace-card .matrix th,.trace-card .matrix td{height:26px;min-width:20px}.trace-status{font:11px var(--mono);color:var(--accent);margin:10px 0;min-height:34px;overflow-wrap:anywhere}.trace-path{font:600 12px var(--mono);line-height:1.65;min-height:44px;overflow-wrap:anywhere}.trace-desc{color:var(--muted);font-size:12px;line-height:1.45;min-height:64px;margin:7px 0 0}.table-scroll{overflow:auto}.compare{border-collapse:collapse;width:100%;font-size:13px;margin:16px 0}.compare th,.compare td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left;min-width:130px}.compare th{font-weight:600}.compare thead th{background:var(--soft)}.compare tbody th{color:#4a515b;min-width:112px}.code-header{display:flex;justify-content:space-between;padding:9px 13px;background:#e9ecf0;border:1px solid var(--line);border-radius:5px 5px 0 0}.java-source{margin-top:0;border-top:0;border-radius:0 0 5px 5px;max-height:420px}.refs{padding-left:20px;font-size:14px;line-height:1.8}.refs li{padding:4px 0}footer{display:flex;justify-content:space-between;color:var(--muted);padding:24px 0 45px}footer a{text-decoration:none}@media(max-width:650px){main,.top-inner{padding-left:17px;padding-right:17px}.hero{padding-top:44px}.hero h1{letter-spacing:-.045em}.top-right{font-size:9px}.contrast>div{padding:13px 12px}.concept-row{font-size:11px;grid-template-columns:25px 13px 1fr;gap:3px}.concept-row b{width:23px;line-height:21px}.lab{padding:11px}.matrix-grid{gap:12px;grid-template-columns:1fr}.matrix th,.matrix td{height:34px}.trace-grid{grid-template-columns:1fr}.trace-card{padding:12px}.trace-card .matrix{font-size:12px}.trace-card .matrix th,.trace-card .matrix td{height:30px}.trace-desc,.trace-status,.trace-path{min-height:0}.tag{font-size:9px}.method-title{gap:8px}.method-title h3{font-size:18px}.trace-graph-title{font-size:10px}.trace-graph-title .small{font-size:9px}.toolbar .speed{margin-left:0}.lab-head{flex-wrap:wrap}.result-row{grid-template-columns:1fr 2.2fr}.query-select{gap:8px}.graph-box svg{min-height:155px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.matrix td{transition:none}}
+
+.all-route{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid #dce0e6}.all-route button{font-family:inherit;text-align:left;white-space:normal;cursor:pointer}.all-route span{font-size:.85rem}.all-route button:focus{outline:2px solid #315bc3}#allList{margin:12px 0}#allMatrix{margin:12px 0}#buildDetail{margin-bottom:20px}</style>
+</head>
+<body>
+<header class="top"><div class="top-inner"><a href="#top" class="brand">DSA<span> / </span>GRAPH</a><span class="top-right">ALGORITHM VISUALIZATION <span class="dot"></span></span></div></header>
+<main id="top">
+<div class="hero"><div class="eyebrow">GRAPH THEORY &nbsp; / &nbsp; ALL-PAIRS SHORTEST PATHS</div><h1>Floyd–Warshall<br><span class="muted">và bài toán truy vết</span></h1><p class="lead">Biết đường đi ngắn nhất dài bao nhiêu là một chuyện. Biết phải đi qua những đỉnh nào lại là một chuyện khác.</p><div class="meta"><span>05 PHƯƠNG ÁN</span><span>02 ĐỒ THỊ</span><span>INTERACTIVE</span></div></div>
+<nav class="toc" aria-label="Mục lục"><a href="#problem">01 Đặt vấn đề</a><a href="#floyd">02 Floyd–Warshall</a><a href="#methods">03 Ba phương án</a><a href="#simulation">04 Mô phỏng</a><a href="#trace">05 Truy vết</a><a href="#all-paths">06 Mọi đường ngắn nhất</a><a href="#comparison">07 So sánh</a></nav>
+<section id="problem"><div class="section-index">01 / MOTIVATION</div><h2>Từ một nguồn đến mọi cặp đỉnh</h2>
+<p>Khi cần tìm đường đi ngắn nhất trên đồ thị có trọng số không âm, Dijkstra là một lựa chọn quen thuộc. Với một đỉnh nguồn <i>s</i>, thuật toán xác định khoảng cách ngắn nhất từ <i>s</i> đến mọi đỉnh khác. Nếu lưu thêm mảng <code>parent</code>, ta còn có thể khôi phục đường đi cụ thể.</p>
+<div class="contrast"><div><span class="mini-label">SINGLE-SOURCE · DIJKSTRA</span><div class="concept-grid"><div class="concept-row"><b>1</b><span>→</span><span>2, 3, 4, 5, 6</span></div><div class="concept-row faded"><b>2</b><span>→</span><span>1, 3, 4, 5, 6</span></div><div class="concept-row faded"><b>⋮</b><span></span><span>⋮</span></div></div><p>Một lần chạy, một nguồn.</p></div><div><span class="mini-label">ALL-PAIRS · FLOYD–WARSHALL</span><div class="concept-grid"><div class="concept-row"><b>1</b><span>→</span><span>2, 3, 4, 5, 6</span></div><div class="concept-row"><b>2</b><span>→</span><span>1, 3, 4, 5, 6</span></div><div class="concept-row"><b>⋮</b><span></span><span>⋮</span></div></div><p>Một lần tiền xử lý, mọi nguồn.</p></div></div>
+<p>Nhưng nếu hệ thống liên tục nhận những truy vấn đường đi giữa <em>các cặp đỉnh bất kỳ</em>, nguồn không còn cố định. Chạy Dijkstra từ từng đỉnh là một phương án, nhưng trên đồ thị dày đặc, chi phí có thể trở nên đáng kể. Với hàng đợi ưu tiên nhị phân, một lần chạy tốn O((V + E) log V); chạy từ V nguồn tốn O(V(V + E) log V). Floyd–Warshall trực tiếp giải bài toán mọi cặp đỉnh trong Θ(V³) bằng quy hoạch động.</p>
+<p>Đây không phải lựa chọn luôn nhanh hơn Dijkstra: trên đồ thị thưa, trọng số không âm, chạy Dijkstra nhiều lần thường có lợi. Với chỉ một hoặc vài truy vấn, cũng không nhất thiết phải tiền xử lý toàn bộ ma trận.</p></section>
+<section id="floyd"><div class="section-index">02 / THE GAP</div><h2>Floyd–Warshall biết khoảng cách. Còn đường đi?</h2><p>Gọi <code>D[i][j]</code> là khoảng cách tốt nhất hiện biết từ đỉnh i đến đỉnh j. Ban đầu, D bằng ma trận trọng số: đường chéo bằng 0; cạnh trực tiếp có trọng số tương ứng; cặp không có cạnh nhận ∞.</p><p>Ở vòng lặp k, ta cho phép dùng thêm đỉnh k làm trung gian. Một đường đi tốt hơn có thể xuất hiện nếu ghép đường i ⇝ k với đường k ⇝ j.</p>
+<div class="formula">D[i][j] ← min(D[i][j], D[i][k] + D[k][j])</div>
+<div class="diagram-wrap"><svg viewBox="0 0 640 146" role="img" aria-label="So sánh đường đi cũ và đường mới qua đỉnh k"><defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8z" fill="currentColor"/></marker></defs><path d="M74 42 Q320 -10 566 42" class="diag-old" marker-end="url(#ar)"/><path d="M75 76 L298 76 M342 76 L565 76" class="diag-new" marker-end="url(#ar)"/><g class="diag-node"><circle cx="55" cy="76" r="21"/><circle cx="320" cy="76" r="21"/><circle cx="585" cy="76" r="21"/><text x="55" y="82">i</text><text x="320" y="82">k</text><text x="585" y="82">j</text></g><text x="320" y="22" class="diag-caption">Đường đi cũ · D[i][j]</text><text x="184" y="116" class="diag-caption">D[i][k]</text><text x="454" y="116" class="diag-caption">D[k][j]</text></svg></div>
+<pre><code><span class="kw">for</span> (int k = 0; k &lt; n; k++)
+    <span class="kw">for</span> (int i = 0; i &lt; n; i++)
+        <span class="kw">for</span> (int j = 0; j &lt; n; j++)
+            <span class="kw">if</span> (D[i][k] != INF &amp;&amp; D[k][j] != INF)
+                D[i][j] = Math.min(D[i][j], D[i][k] + D[k][j]);</code></pre>
+<p>Floyd–Warshall dạng cơ bản trả về ma trận khoảng cách. Chẳng hạn, <code>D[1][6] = 14</code> cho biết tổng trọng số tối thiểu là 14, nhưng không trực tiếp lưu danh sách đỉnh tạo thành con đường đó.</p><div class="contrast compact"><div><span class="mini-label">KHOẢNG CÁCH</span><strong class="big-num">14</strong><span class="small">D[1][6]</span></div><div><span class="mini-label">ĐƯỜNG ĐI</span><div class="path-line"><b>1</b><span>→</span><b>?</b><span>→</span><b>6</b></div><span class="small">Cần khôi phục chuỗi đỉnh</span></div></div>
+<p>Nếu còn giữ đồ thị gốc, ta có thể tìm lại một đường thỏa mãn các đẳng thức khoảng cách. Tuy nhiên, một cách trực tiếp và hiệu quả hơn là lưu thêm thông tin ngay lúc phép cập nhật xảy ra. Ta chỉ cần thêm một ma trận V × V, không cần lưu cả danh sách đường đi trong từng ô.</p></section>
+<section id="methods"><div class="section-index">03 / THREE APPROACHES</div><h2>Cùng một phép cập nhật, ba cách ghi nhớ</h2><p>Khi <code>D[i][k] + D[k][j] &lt; D[i][j]</code>, đường đi mới từ i đến j được tạo thành bằng cách nối hai đường đi ngắn hơn. Ba cách sau khác nhau ở việc giữ lại thông tin nào về phép nối này.</p>
+<article class="method"><div class="method-title"><span>01</span><h3>Predecessor Matrix</h3><span class="tag">TRUY NGƯỢC</span></div><p><code>P[i][j]</code> lưu đỉnh ngay trước j trên đường đi đang được chọn từ i đến j. Nếu i → j là cạnh trực tiếp, <code>P[i][j] = i</code>; nếu i = j hoặc không có đường đi, đặt −1.</p><div class="method-figure"><span>i</span><i>⇝</i><span>k</span><i>⇝</i><span class="accent-node">p</span><i>→</i><span>j</span><small>P[i][j] = P[k][j] = p</small></div><div class="formula">P[i][j] ← P[k][j]</div><p>Phần cuối của đường đi mới chính là đoạn k ⇝ j, nên đỉnh đứng ngay trước j được kế thừa từ đường này. Để truy vết, giữ nguyên hàng i, bắt đầu tại j rồi liên tục đọc <code>P[i][current]</code> cho đến i. Đảo ngược danh sách thu được.</p><pre><code><span class="kw">if</span> (candidate &lt; D[i][j]) {
+    D[i][j] = candidate;
+    <span class="focus-code">P[i][j] = P[k][j];</span>
+}</code></pre></article>
+<article class="method"><div class="method-title"><span>02</span><h3>Next-Hop Matrix</h3><span class="tag">TRUY XUÔI</span></div><p><code>N[i][j]</code> lưu đỉnh đầu tiên sau i trên đường đi đang được chọn tới j. Với cạnh trực tiếp i → j, <code>N[i][j] = j</code>; cặp không có cạnh đặt −1. Quy ước <code>N[i][i] = i</code>.</p><div class="method-figure"><span>i</span><i>→</i><span class="accent-node">q</span><i>⇝</i><span>k</span><i>⇝</i><span>j</span><small>N[i][j] = N[i][k] = q</small></div><div class="formula">N[i][j] ← N[i][k]</div><p>Đường đi mới bắt đầu giống đoạn i ⇝ k, vì vậy bước nhảy đầu tiên không cần tính lại. Giữ nguyên cột j, bắt đầu tại i và lần lượt đọc <code>N[current][j]</code>. Danh sách đã theo đúng thứ tự từ nguồn đến đích.</p><pre><code><span class="kw">if</span> (candidate &lt; D[i][j]) {
+    D[i][j] = candidate;
+    <span class="focus-code">N[i][j] = N[i][k];</span>
+}</code></pre></article>
+<article class="method"><div class="method-title"><span>03</span><h3>Intermediate Matrix</h3><span class="tag">CHIA ĐỂ TRỊ</span></div><p><code>M[i][j]</code> lưu đỉnh trung gian k tại lần cập nhật gần nhất làm khoảng cách i → j giảm. Tất cả ô ban đầu đặt −1. Ma trận D dùng để phân biệt đường không tồn tại với đường trực tiếp.</p><div class="method-figure"><span>i</span><i>⇝</i><span class="accent-node">k</span><i>⇝</i><span>j</span><small>M[i][j] = k</small></div><div class="formula">M[i][j] ← k</div><p>Thay vì nhớ đỉnh sát đầu hoặc sát cuối, ta nhớ nơi đường đi được chia thành hai phần. Nếu <code>M[i][j] = k</code>, truy vết đệ quy i ⇝ k rồi k ⇝ j, không lặp k. Nếu M bằng −1 và D hữu hạn, hai đầu tạo thành một cạnh trực tiếp (hoặc cùng một đỉnh).</p><pre><code><span class="kw">if</span> (candidate &lt; D[i][j]) {
+    D[i][j] = candidate;
+    <span class="focus-code">M[i][j] = k;</span>
+}</code></pre></article>
+<div class="note"><b>Quy ước quan trọng.</b> Tên ma trận <code>P</code>, <code>N</code>, <code>M</code> được chọn riêng cho bài này; tài liệu khác có thể dùng cùng tên <code>path</code> hoặc <code>next</code> cho những ý nghĩa khác nhau. Hãy đọc định nghĩa của phần tử, không chỉ đọc tên biến.</div></section>
+<section id="simulation"><div class="section-index">04 / LIVE SIMULATION</div><h2>Quan sát thông tin được lưu như thế nào</h2><p>Đồ thị có hướng sau có 6 đỉnh. Các cạnh có trọng số dương, nên mọi đường đi ngắn nhất có thể chọn là đường đơn. Mặc định, mô phỏng lướt qua những phép so sánh không thay đổi kết quả và dừng tại từng lần cập nhật thực sự.</p>
+<div class="lab" id="floyd-lab"><div class="lab-head"><div><div class="mini-label">FLOYD–WARSHALL ENGINE</div><strong id="phaseLabel">Khởi tạo</strong></div><span class="counter" id="stepCount">0 / 0</span></div><div class="graph-box"><svg id="graphF" viewBox="0 0 660 308" role="img" aria-label="Đồ thị mô phỏng cập nhật Floyd"></svg></div><div class="legend"><span><i class="swatch blue"></i> Đường mới qua k</span><span><i class="swatch grey"></i> Cạnh đồ thị</span><span><i class="swatch pale"></i> Ô tham chiếu</span><span><i class="swatch solid"></i> Ô đang xét</span></div>
+<div class="toolbar"><button id="fReset" title="Về bước đầu">↺</button><button id="fPrev" title="Bước trước">←</button><button id="fPlay" class="primary">▶ Phát</button><button id="fNext" title="Bước tiếp">→</button><button id="fEnd" title="Đến kết quả cuối">⇥</button><label class="speed">Tốc độ <select id="fSpeed"><option value="1000">0.5×</option><option value="550" selected>1×</option><option value="250">2×</option><option value="100">5×</option></select></label></div><input type="range" id="fRange" min="0" max="1" value="0" aria-label="Tiến độ Floyd"><div class="options"><label><input type="checkbox" id="allSteps"> Hiện cả các phép so sánh không cải thiện</label><span id="stats"></span></div>
+<div class="readout" id="fExplain" aria-live="polite"></div>
+<div class="tabs" id="methodTabs" role="tablist" aria-label="Chọn ma trận bổ trợ"><button role="tab" aria-selected="true" data-method="P">Predecessor · P</button><button role="tab" aria-selected="false" data-method="N">Next-Hop · N</button><button role="tab" aria-selected="false" data-method="M">Intermediate · M</button></div><div class="matrix-grid"><div><div class="matrix-title">Ma trận khoảng cách <code>D</code></div><div id="distMatrix" class="matrix-scroll"></div></div><div><div class="matrix-title" id="auxTitle">Ma trận Predecessor <code>P</code></div><div id="auxMatrix" class="matrix-scroll"></div></div></div><p class="matrix-note" id="auxExplain"></p></div>
+</section>
+<section id="trace"><div class="section-index">05 / PATH RECONSTRUCTION</div><h2>Ba ma trận. Một đường đi ngắn nhất.</h2><p>Phần này sử dụng các ma trận sau khi Floyd–Warshall hoàn thành. Chọn nguồn và đích bất kỳ, rồi chạy ba cách truy vết song song. Click một ma trận để chuyển phần minh họa trên đồ thị sang phương án đó.</p>
+<div class="lab" id="trace-lab"><div class="lab-head"><div><div class="mini-label">PATH RECONSTRUCTION ENGINE</div><strong id="queryLabel">1 → 6</strong></div><div class="query-select"><label>Nguồn <select id="src"></select></label><label>Đích <select id="dst"></select></label></div></div><div class="result-row"><div><span class="mini-label">KHOẢNG CÁCH</span><strong id="queryDist">14</strong></div><div><span class="mini-label">KẾT QUẢ THAM CHIẾU</span><strong id="queryPath">1 → 2 → 3 → 4 → 5 → 6</strong></div></div><div class="trace-graph-title"><span id="graphMethod">PREDECESSOR</span><span class="small">Cạnh tô màu là các cạnh đã truy vết</span></div><div class="graph-box"><svg id="graphT" viewBox="0 0 660 308" role="img" aria-label="Đồ thị truy vết đường đi"></svg></div><div class="toolbar"><button id="tReset" title="Về bước đầu">↺</button><button id="tPrev" title="Bước trước">←</button><button id="tPlay" class="primary">▶ Truy vết</button><button id="tNext" title="Bước tiếp">→</button><button id="tEnd" title="Đến kết quả cuối">⇥</button><label class="speed">Tốc độ <select id="tSpeed"><option value="1400">0.5×</option><option value="750" selected>1×</option><option value="350">2×</option><option value="150">5×</option></select></label><span class="counter" id="traceStep"></span></div><input type="range" id="tRange" min="0" max="1" value="0" aria-label="Tiến độ truy vết"><div id="traceCards" class="trace-grid"></div><p class="matrix-note">Nếu các đường ngắn nhất có cùng trọng số, thuật toán giữ đường đang chọn khi xảy ra hòa. Mỗi phương án phải trả về một đường đi hợp lệ có cùng tổng trọng số; không bắt buộc chuỗi đỉnh giống nhau trong mọi đồ thị.</p></div>
+</section>
+<section id="all-paths"><div class="section-index">06 / ALL SHORTEST PATHS</div><h2>Nếu tồn tại nhiều đường đi ngắn nhất?</h2>
+<p>Ba ma trận trên lưu một lựa chọn duy nhất. Khi ứng viên có cùng độ dài với đường cũ, ta không cập nhật. Để liệt kê <strong>tất cả đường đi ngắn nhất đơn</strong> (không lặp đỉnh), cần giữ lại các lựa chọn đồng hạng hoặc tìm lại chúng từ đồ thị gốc.</p>
+<article class="method"><div class="method-title"><span>04</span><h3>Next-Hop Set + DFS</h3><span class="tag">LƯU TẬP HỢP</span></div><p>H[i][j] lưu tập các đỉnh có thể là bước đầu tiên từ i tới j. Khởi tạo H[i][j] = {j} nếu có cạnh trực tiếp i → j và i ≠ j; các ô còn lại rỗng. Khi xét một đỉnh trung gian k khác hai đầu mút:</p><div class="formula">candidate &lt; D[i][j] : H[i][j] ← copy(H[i][k])<br>candidate = D[i][j] : H[i][j] ← H[i][j] ∪ H[i][k]</div><p>Ở trường hợp đầu, cập nhật D và thay thế tập cũ; ở trường hợp hòa hữu hạn, hợp hai tập. DFS từ nguồn, giữ cố định đích, thử mọi đỉnh trong H[u][t]. Đánh dấu các đỉnh trên nhánh hiện tại để tránh lặp. Bỏ qua phép ghép qua chính hai đầu mút trong cập nhật H, vì không tạo thêm bước đầu tiên hữu ích cho đường đơn.</p></article>
+<article class="method"><div class="method-title"><span>05</span><h3>Distance Matrix + Tight Edges</h3><span class="tag">KHÔNG MA TRẬN PHỤ</span></div><p>Sau Floyd, xét từng cạnh gốc u → v có trọng số w(u,v). Cạnh này có thể tiếp tục một đường ngắn nhất tới t khi:</p><div class="formula">D[u][t] = w(u,v) + D[v][t]</div><p>DFS chỉ đi qua cạnh thỏa đẳng thức này, với hai khoảng cách hữu hạn và v chưa xuất hiện trên nhánh. Tổng các đẳng thức triệt tiêu thành tổng trọng số D[s][t]. Ngược lại, mọi cạnh trên một đường ngắn nhất hữu hạn đều phải thỏa đẳng thức, nên không bỏ sót đường đơn nào. Không cần ma trận phụ, nhưng phải giữ đồ thị gốc.</p></article>
+<p>Đồ thị dưới đây dùng cùng cấu trúc 6 đỉnh, thay đổi trọng số của bốn cạnh để tạo các đường đồng hạng. Chọn cặp đỉnh bất kỳ và phương án, xem DFS phân nhánh rồi quay lui. Kết quả liệt kê từng đường và cho phép tô riêng từng đường trên đồ thị.</p>
+<div class="lab"><div class="lab-head"><div><div class="mini-label">ALL SHORTEST PATHS ENGINE</div><strong id="allQuery">1 → 6</strong></div><div class="query-select"><label>Nguồn <select id="allSrc"></select></label><label>Đích <select id="allDst"></select></label></div></div>
+<div class="result-row"><div><span class="mini-label">KHOẢNG CÁCH</span><strong id="allDist"></strong></div><div><span class="mini-label">SỐ ĐƯỜNG NGẮN NHẤT ĐƠN</span><strong id="allCount"></strong></div></div>
+<div class="toolbar"><label>Phương án <select id="allMethod"><option value="set">Next-Hop Set + DFS</option><option value="tight">Distance + Tight Edges</option></select></label></div>
+<div class="graph-box"><svg id="graphAll" viewBox="0 0 660 308" role="img" aria-label="Đồ thị có nhiều đường đi ngắn nhất"></svg></div><div class="legend"><span><i class="swatch blue"></i> Nhánh hiện tại</span><span><i class="swatch grey"></i> Cạnh gốc</span></div>
+<div class="toolbar"><button id="aReset" title="Về đầu">↺</button><button id="aPrev" title="Bước trước">←</button><button id="aPlay" class="primary">▶ Truy vết</button><button id="aNext" title="Bước tiếp">→</button><button id="aEnd" title="Kết quả cuối">⇥</button><label class="speed">Tốc độ <select id="aSpeed"><option value="1400">0.5×</option><option value="650" selected>1×</option><option value="300">2×</option><option value="120">5×</option></select></label><span id="aStep" class="counter"></span></div><input type="range" id="aRange" min="0" max="1" value="0" aria-label="Tiến độ DFS">
+<div id="allExplain" class="note" aria-live="polite"></div><div class="table-scroll" id="allMatrix"></div>
+<div class="toolbar"><button id="buildPrev">←</button><button id="buildNext">→</button><span class="mini-label" id="buildLabel">Cập nhật tập H khi chạy Floyd</span></div><div id="buildDetail" class="note"></div>
+<h3>Danh sách đường đi</h3><div id="allList"></div><p class="small" id="allVerify"></p></div>
+<h3>Độ phức tạp thực sự</h3><div class="table-scroll"><table class="compare"><thead><tr><th>Phương án</th><th>Tiền xử lý</th><th>Bộ nhớ phụ ngoài D và đồ thị</th><th>Truy vết</th></tr></thead><tbody><tr><th>P / N / M</th><td>Θ(V³)</td><td>Θ(V²)</td><td>Một đường, O(L + 1)</td></tr><tr><th>Next-Hop Set</th><td>O(V⁴) với hợp tập thông thường</td><td>O(V³)</td><td>DFS theo tập lựa chọn</td></tr><tr><th>Tight Edges</th><td>Θ(V³)</td><td>Không cần ma trận phụ</td><td>DFS, kiểm tra cạnh gốc</td></tr></tbody></table></div>
+<p>Hai phương án liệt kê dùng thêm O(V) cho ngăn xếp và đường hiện tại; nếu lưu toàn bộ kết quả, cần bộ nhớ tỷ lệ với tổng độ dài các đường. Số đường đơn ngắn nhất có thể tăng theo hàm mũ, thậm chí giai thừa khi có nhiều cạnh trọng số 0. Với chu trình tổng trọng số 0, số hành trình cho phép lặp đỉnh có thể vô hạn; vì thế ở đây chỉ liệt kê đường đơn. Cặp bị ảnh hưởng bởi chu trình âm không có cực tiểu hữu hạn và phải được loại trước khi DFS. Các ví dụ dùng trọng số nguyên để phép so sánh bằng là chính xác.</p>
+<p><strong>Khuyến nghị:</strong> nếu chỉ cần một đường, dùng Next-Hop Matrix. Nếu cần tất cả đường nhưng không muốn chi phí lưu tập cho mọi cặp, dùng ma trận D và cạnh chặt; nếu phải truy vấn lặp lại nhiều lần, có thể lưu trước tập cạnh chặt theo đích.</p>
+</section>
+<section id="comparison"><div class="section-index">07 / TRADE-OFFS</div><h2>Chọn phương án nào?</h2><p>Cả ba phương án đều chỉ thêm một phép gán O(1) vào nhánh cập nhật của Floyd–Warshall. Thời gian tiền xử lý vẫn là Θ(V³); bộ nhớ khoảng cách và một ma trận phụ vẫn là Θ(V²). Một đường đi gồm L cạnh cần O(L + 1) thời gian để truy vết.</p><div class="table-scroll"><table class="compare"><thead><tr><th>Tiêu chí</th><th>Predecessor</th><th>Next-Hop</th><th>Intermediate</th></tr></thead><tbody><tr><th>Lưu gì?</th><td>Đỉnh trước đích</td><td>Đỉnh sau nguồn</td><td>Đỉnh tách đường</td></tr><tr><th>Cập nhật</th><td><code>P[k][j]</code></td><td><code>N[i][k]</code></td><td><code>k</code></td></tr><tr><th>Truy vết</th><td>Vòng lặp ngược</td><td>Vòng lặp xuôi</td><td>Đệ quy hai nhánh</td></tr><tr><th>Bộ nhớ phụ của truy vết*</th><td>O(1)</td><td>O(1)</td><td>O(L)</td></tr><tr><th>Phù hợp</th><td>Cây đường đi, nhất quán với parent của Dijkstra</td><td>In đường đi, bước nhảy tiếp theo</td><td>Học DP, theo dõi cách ghép đường</td></tr></tbody></table></div><p class="small">* Không tính danh sách kết quả; Intermediate sử dụng ngăn xếp đệ quy, tối đa O(L) trên đường đơn. Dùng phép ghép không sao chép lại các danh sách con để đạt O(L + 1).</p><p><strong>Predecessor</strong> là lựa chọn tự nhiên khi đã quen với mảng parent trong Dijkstra hoặc cần cây đường đi ngắn nhất theo từng nguồn. <strong>Next-Hop</strong> thuận tiện nhất khi muốn in đường đi trực tiếp theo thứ tự hoặc lấy bước nhảy tiếp theo. <strong>Intermediate</strong> dễ liên hệ nhất với tư tưởng quy hoạch động của Floyd–Warshall.</p>
+<h3>Cài đặt Java</h3><p>Ví dụ dưới đây lưu cả ba ma trận để so sánh. Khi triển khai thực tế, chỉ cần giữ ma trận phù hợp với mục đích. Mã dùng chỉ số 0-based (giao diện dùng nhãn 1–6). Hàm truy vết nhận biết cặp không tới được và từ chối cặp bị ảnh hưởng bởi chu trình âm. Bản minh họa kiểm tra chu trình âm trong O(V) mỗi truy vấn; có thể tiền xử lý trạng thái từng cặp để kiểm tra O(1).</p><div class="code-header"><span>FloydWarshallPaths.java</span><a href="data:text/plain;base64,aW1wb3J0IGphdmEudXRpbC4qOwoKcHVibGljIGZpbmFsIGNsYXNzIEZsb3lkV2Fyc2hhbGxQYXRocyB7CiAgICBwdWJsaWMgc3RhdGljIGZpbmFsIGxvbmcgSU5GID0gTG9uZy5NQVhfVkFMVUU7CiAgICBwcml2YXRlIGZpbmFsIGludCBuOwogICAgcHJpdmF0ZSBmaW5hbCBsb25nW11bXSBkOwogICAgcHJpdmF0ZSBmaW5hbCBpbnRbXVtdIHAsIG5leHQsIG1pZDsKCiAgICBwdWJsaWMgRmxveWRXYXJzaGFsbFBhdGhzKGxvbmdbXVtdIHcpIHsKICAgICAgICBuID0gdy5sZW5ndGg7CiAgICAgICAgZCA9IG5ldyBsb25nW25dW25dOwogICAgICAgIHAgPSBuZXcgaW50W25dW25dOwogICAgICAgIG5leHQgPSBuZXcgaW50W25dW25dOwogICAgICAgIG1pZCA9IG5ldyBpbnRbbl1bbl07CiAgICAgICAgZm9yIChpbnQgaSA9IDA7IGkgPCBuOyBpKyspIHsKICAgICAgICAgICAgaWYgKHdbaV0ubGVuZ3RoICE9IG4pIHRocm93IG5ldyBJbGxlZ2FsQXJndW1lbnRFeGNlcHRpb24oIk5vbi1zcXVhcmUgbWF0cml4Iik7CiAgICAgICAgICAgIEFycmF5cy5maWxsKHBbaV0sIC0xKTsKICAgICAgICAgICAgQXJyYXlzLmZpbGwobmV4dFtpXSwgLTEpOwogICAgICAgICAgICBBcnJheXMuZmlsbChtaWRbaV0sIC0xKTsKICAgICAgICAgICAgZm9yIChpbnQgaiA9IDA7IGogPCBuOyBqKyspIHsKICAgICAgICAgICAgICAgIGRbaV1bal0gPSBpID09IGogPyBNYXRoLm1pbigwTCwgd1tpXVtqXSkgOiB3W2ldW2pdOwogICAgICAgICAgICAgICAgaWYgKGkgPT0gaikgbmV4dFtpXVtqXSA9IGk7CiAgICAgICAgICAgICAgICBlbHNlIGlmIChkW2ldW2pdICE9IElORikgewogICAgICAgICAgICAgICAgICAgIHBbaV1bal0gPSBpOwogICAgICAgICAgICAgICAgICAgIG5leHRbaV1bal0gPSBqOwogICAgICAgICAgICAgICAgfQogICAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIGZvciAoaW50IGsgPSAwOyBrIDwgbjsgaysrKQogICAgICAgICAgICBmb3IgKGludCBpID0gMDsgaSA8IG47IGkrKykgewogICAgICAgICAgICAgICAgaWYgKGRbaV1ba10gPT0gSU5GKSBjb250aW51ZTsKICAgICAgICAgICAgICAgIGZvciAoaW50IGogPSAwOyBqIDwgbjsgaisrKSB7CiAgICAgICAgICAgICAgICAgICAgaWYgKGRba11bal0gPT0gSU5GKSBjb250aW51ZTsKICAgICAgICAgICAgICAgICAgICBsb25nIGNhbmRpZGF0ZSA9IE1hdGguYWRkRXhhY3QoZFtpXVtrXSwgZFtrXVtqXSk7CiAgICAgICAgICAgICAgICAgICAgaWYgKGNhbmRpZGF0ZSA9PSBJTkYpIHRocm93IG5ldyBBcml0aG1ldGljRXhjZXB0aW9uKCJEaXN0YW5jZSBlcXVhbHMgSU5GIHNlbnRpbmVsIik7CiAgICAgICAgICAgICAgICAgICAgaWYgKGNhbmRpZGF0ZSA8IGRbaV1bal0pIHsKICAgICAgICAgICAgICAgICAgICAgICAgZFtpXVtqXSA9IGNhbmRpZGF0ZTsKICAgICAgICAgICAgICAgICAgICAgICAgcFtpXVtqXSA9IHBba11bal07CiAgICAgICAgICAgICAgICAgICAgICAgIG5leHRbaV1bal0gPSBuZXh0W2ldW2tdOwogICAgICAgICAgICAgICAgICAgICAgICBtaWRbaV1bal0gPSBrOwogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgfQogICAgfQoKICAgIHB1YmxpYyBib29sZWFuIGFmZmVjdGVkQnlOZWdhdGl2ZUN5Y2xlKGludCBzLCBpbnQgdCkgewogICAgICAgIGZvciAoaW50IGsgPSAwOyBrIDwgbjsgaysrKQogICAgICAgICAgICBpZiAoZFtrXVtrXSA8IDAgJiYgZFtzXVtrXSAhPSBJTkYgJiYgZFtrXVt0XSAhPSBJTkYpCiAgICAgICAgICAgICAgICByZXR1cm4gdHJ1ZTsKICAgICAgICByZXR1cm4gZmFsc2U7CiAgICB9CgogICAgcHVibGljIGxvbmcgZGlzdGFuY2UoaW50IHMsIGludCB0KSB7CiAgICAgICAgZW5zdXJlRmluaXRlTWluaW11bShzLCB0KTsKICAgICAgICByZXR1cm4gZFtzXVt0XTsKICAgIH0KCiAgICBwcml2YXRlIHZvaWQgZW5zdXJlRmluaXRlTWluaW11bShpbnQgcywgaW50IHQpIHsKICAgICAgICBpZiAoYWZmZWN0ZWRCeU5lZ2F0aXZlQ3ljbGUocywgdCkpCiAgICAgICAgICAgIHRocm93IG5ldyBJbGxlZ2FsU3RhdGVFeGNlcHRpb24oIk5vIGZpbml0ZSBzaG9ydGVzdCBwYXRoOiBuZWdhdGl2ZSBjeWNsZSIpOwogICAgfQoKICAgIHB1YmxpYyBMaXN0PEludGVnZXI+IHByZWRlY2Vzc29yUGF0aChpbnQgcywgaW50IHQpIHsKICAgICAgICBlbnN1cmVGaW5pdGVNaW5pbXVtKHMsIHQpOwogICAgICAgIGlmIChkW3NdW3RdID09IElORikgcmV0dXJuIExpc3Qub2YoKTsKICAgICAgICBMaXN0PEludGVnZXI+IHJlc3VsdCA9IG5ldyBBcnJheUxpc3Q8PigpOwogICAgICAgIGludCB2ID0gdDsKICAgICAgICByZXN1bHQuYWRkKHYpOwogICAgICAgIHdoaWxlICh2ICE9IHMpIHsKICAgICAgICAgICAgdiA9IHBbc11bdl07CiAgICAgICAgICAgIGlmICh2IDwgMCB8fCByZXN1bHQuc2l6ZSgpID49IG4pIHRocm93IG5ldyBJbGxlZ2FsU3RhdGVFeGNlcHRpb24oIkludmFsaWQgY2hhaW4iKTsKICAgICAgICAgICAgcmVzdWx0LmFkZCh2KTsKICAgICAgICB9CiAgICAgICAgQ29sbGVjdGlvbnMucmV2ZXJzZShyZXN1bHQpOwogICAgICAgIHJldHVybiByZXN1bHQ7CiAgICB9CgogICAgcHVibGljIExpc3Q8SW50ZWdlcj4gbmV4dEhvcFBhdGgoaW50IHMsIGludCB0KSB7CiAgICAgICAgZW5zdXJlRmluaXRlTWluaW11bShzLCB0KTsKICAgICAgICBpZiAoZFtzXVt0XSA9PSBJTkYpIHJldHVybiBMaXN0Lm9mKCk7CiAgICAgICAgTGlzdDxJbnRlZ2VyPiByZXN1bHQgPSBuZXcgQXJyYXlMaXN0PD4oKTsKICAgICAgICBpbnQgdiA9IHM7CiAgICAgICAgcmVzdWx0LmFkZCh2KTsKICAgICAgICB3aGlsZSAodiAhPSB0KSB7CiAgICAgICAgICAgIHYgPSBuZXh0W3ZdW3RdOwogICAgICAgICAgICBpZiAodiA8IDAgfHwgcmVzdWx0LnNpemUoKSA+PSBuKSB0aHJvdyBuZXcgSWxsZWdhbFN0YXRlRXhjZXB0aW9uKCJJbnZhbGlkIGNoYWluIik7CiAgICAgICAgICAgIHJlc3VsdC5hZGQodik7CiAgICAgICAgfQogICAgICAgIHJldHVybiByZXN1bHQ7CiAgICB9CgogICAgcHVibGljIExpc3Q8SW50ZWdlcj4gaW50ZXJtZWRpYXRlUGF0aChpbnQgcywgaW50IHQpIHsKICAgICAgICBlbnN1cmVGaW5pdGVNaW5pbXVtKHMsIHQpOwogICAgICAgIGlmIChkW3NdW3RdID09IElORikgcmV0dXJuIExpc3Qub2YoKTsKICAgICAgICBMaXN0PEludGVnZXI+IHJlc3VsdCA9IG5ldyBBcnJheUxpc3Q8PigpOwogICAgICAgIHJlc3VsdC5hZGQocyk7CiAgICAgICAgZXhwYW5kKHMsIHQsIHJlc3VsdCk7CiAgICAgICAgcmV0dXJuIHJlc3VsdDsKICAgIH0KCiAgICBwcml2YXRlIHZvaWQgZXhwYW5kKGludCBpLCBpbnQgaiwgTGlzdDxJbnRlZ2VyPiByZXN1bHQpIHsKICAgICAgICBpZiAoaSA9PSBqKSByZXR1cm47CiAgICAgICAgaW50IGsgPSBtaWRbaV1bal07CiAgICAgICAgaWYgKGsgPT0gLTEpIHsKICAgICAgICAgICAgcmVzdWx0LmFkZChqKTsKICAgICAgICAgICAgcmV0dXJuOwogICAgICAgIH0KICAgICAgICBleHBhbmQoaSwgaywgcmVzdWx0KTsKICAgICAgICBleHBhbmQoaywgaiwgcmVzdWx0KTsKICAgIH0KCiAgICBwdWJsaWMgc3RhdGljIHZvaWQgbWFpbihTdHJpbmdbXSBhcmdzKSB7CiAgICAgICAgbG9uZ1tdW10gdyA9IG5ldyBsb25nWzZdWzZdOwogICAgICAgIGZvciAobG9uZ1tdIHJvdyA6IHcpIEFycmF5cy5maWxsKHJvdywgSU5GKTsKICAgICAgICBpbnRbXVtdIGVkZ2VzID0gewogICAgICAgICAgICB7MCwgMSwgNH0sIHswLCAyLCAxNX0sIHswLCA1LCAzMH0sIHsxLCAyLCAzfSwKICAgICAgICAgICAgezEsIDMsIDh9LCB7MiwgMywgMn0sIHsyLCA0LCA5fSwgezMsIDQsIDJ9LAogICAgICAgICAgICB7MywgNSwgMTB9LCB7NCwgNSwgM30KICAgICAgICB9OwogICAgICAgIGZvciAoaW50W10gZSA6IGVkZ2VzKSB3W2VbMF1dW2VbMV1dID0gZVsyXTsKICAgICAgICBGbG95ZFdhcnNoYWxsUGF0aHMgZiA9IG5ldyBGbG95ZFdhcnNoYWxsUGF0aHModyk7CiAgICAgICAgU3lzdGVtLm91dC5wcmludGxuKGYuZGlzdGFuY2UoMCwgNSkpOwogICAgICAgIFN5c3RlbS5vdXQucHJpbnRsbihmLnByZWRlY2Vzc29yUGF0aCgwLCA1KSk7CiAgICAgICAgU3lzdGVtLm91dC5wcmludGxuKGYubmV4dEhvcFBhdGgoMCwgNSkpOwogICAgICAgIFN5c3RlbS5vdXQucHJpbnRsbihmLmludGVybWVkaWF0ZVBhdGgoMCwgNSkpOwogICAgfQp9Cg==" download="FloydWarshallPaths.java">Tải mã nguồn ↓</a></div><pre class="java-source"><code id="javaCode">import java.util.*;
+
+public final class FloydWarshallPaths {
+    public static final long INF = Long.MAX_VALUE;
+    private final int n;
+    private final long[][] d;
+    private final int[][] p, next, mid;
+
+    public FloydWarshallPaths(long[][] w) {
+        n = w.length;
+        d = new long[n][n];
+        p = new int[n][n];
+        next = new int[n][n];
+        mid = new int[n][n];
+        for (int i = 0; i &lt; n; i++) {
+            if (w[i].length != n) throw new IllegalArgumentException(&quot;Non-square matrix&quot;);
+            Arrays.fill(p[i], -1);
+            Arrays.fill(next[i], -1);
+            Arrays.fill(mid[i], -1);
+            for (int j = 0; j &lt; n; j++) {
+                d[i][j] = i == j ? Math.min(0L, w[i][j]) : w[i][j];
+                if (i == j) next[i][j] = i;
+                else if (d[i][j] != INF) {
+                    p[i][j] = i;
+                    next[i][j] = j;
+                }
+            }
+        }
+        for (int k = 0; k &lt; n; k++)
+            for (int i = 0; i &lt; n; i++) {
+                if (d[i][k] == INF) continue;
+                for (int j = 0; j &lt; n; j++) {
+                    if (d[k][j] == INF) continue;
+                    long candidate = Math.addExact(d[i][k], d[k][j]);
+                    if (candidate == INF) throw new ArithmeticException(&quot;Distance equals INF sentinel&quot;);
+                    if (candidate &lt; d[i][j]) {
+                        d[i][j] = candidate;
+                        p[i][j] = p[k][j];
+                        next[i][j] = next[i][k];
+                        mid[i][j] = k;
+                    }
+                }
+            }
+    }
+
+    public boolean affectedByNegativeCycle(int s, int t) {
+        for (int k = 0; k &lt; n; k++)
+            if (d[k][k] &lt; 0 &amp;&amp; d[s][k] != INF &amp;&amp; d[k][t] != INF)
+                return true;
+        return false;
+    }
+
+    public long distance(int s, int t) {
+        ensureFiniteMinimum(s, t);
+        return d[s][t];
+    }
+
+    private void ensureFiniteMinimum(int s, int t) {
+        if (affectedByNegativeCycle(s, t))
+            throw new IllegalStateException(&quot;No finite shortest path: negative cycle&quot;);
+    }
+
+    public List&lt;Integer&gt; predecessorPath(int s, int t) {
+        ensureFiniteMinimum(s, t);
+        if (d[s][t] == INF) return List.of();
+        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+        int v = t;
+        result.add(v);
+        while (v != s) {
+            v = p[s][v];
+            if (v &lt; 0 || result.size() &gt;= n) throw new IllegalStateException(&quot;Invalid chain&quot;);
+            result.add(v);
+        }
+        Collections.reverse(result);
+        return result;
+    }
+
+    public List&lt;Integer&gt; nextHopPath(int s, int t) {
+        ensureFiniteMinimum(s, t);
+        if (d[s][t] == INF) return List.of();
+        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+        int v = s;
+        result.add(v);
+        while (v != t) {
+            v = next[v][t];
+            if (v &lt; 0 || result.size() &gt;= n) throw new IllegalStateException(&quot;Invalid chain&quot;);
+            result.add(v);
+        }
+        return result;
+    }
+
+    public List&lt;Integer&gt; intermediatePath(int s, int t) {
+        ensureFiniteMinimum(s, t);
+        if (d[s][t] == INF) return List.of();
+        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+        result.add(s);
+        expand(s, t, result);
+        return result;
+    }
+
+    private void expand(int i, int j, List&lt;Integer&gt; result) {
+        if (i == j) return;
+        int k = mid[i][j];
+        if (k == -1) {
+            result.add(j);
+            return;
+        }
+        expand(i, k, result);
+        expand(k, j, result);
+    }
+
+    public static void main(String[] args) {
+        long[][] w = new long[6][6];
+        for (long[] row : w) Arrays.fill(row, INF);
+        int[][] edges = {
+            {0, 1, 4}, {0, 2, 15}, {0, 5, 30}, {1, 2, 3},
+            {1, 3, 8}, {2, 3, 2}, {2, 4, 9}, {3, 4, 2},
+            {3, 5, 10}, {4, 5, 3}
+        };
+        for (int[] e : edges) w[e[0]][e[1]] = e[2];
+        FloydWarshallPaths f = new FloydWarshallPaths(w);
+        System.out.println(f.distance(0, 5));
+        System.out.println(f.predecessorPath(0, 5));
+        System.out.println(f.nextHopPath(0, 5));
+        System.out.println(f.intermediatePath(0, 5));
+    }
+}
+</code></pre>
+<div class="note"><b>Điều kiện áp dụng.</b> Floyd–Warshall cho phép cạnh âm. Nếu tồn tại đỉnh t với D[t][t] &lt; 0, và i tới được t, t tới được j, thì cặp i, j không có đường ngắn nhất hữu hạn. Không thực hiện truy vết cho cặp đó. Khi dùng số nguyên hữu hạn thay ∞, kiểm tra hai đoạn tồn tại trước khi cộng và tránh tràn số.</div></section>
+<section id="references"><div class="section-index">08 / FURTHER READING</div><h2>Tài liệu tham khảo</h2><ol class="refs"><li>Cormen, Leiserson, Rivest, Stein. <i>Introduction to Algorithms</i>, 3rd edition, §25.2 — Floyd–Warshall và predecessor matrix.</li><li><a href="https://cp-algorithms.com/graph/all-pair-shortest-path-floyd-warshall.html">CP-Algorithms — Floyd–Warshall Algorithm</a> (Intermediate Matrix).</li><li><a href="https://franckc.folk.ntnu.no/idata2302/2026/graphs/shortest_path/index.html">NTNU — Reachability &amp; Shortest Paths</a> (APSP và công thức truy hồi).</li><li><a href="https://solvelogs.com/learn/floyd-warshall-algorithm/">SolveLogs — Floyd–Warshall: All-Pairs Paths and Negative Cycles</a> (Next-Hop).</li></ol></section>
+<footer><span>DSA / GRAPH ALGORITHMS</span><a href="#top">Về đầu trang ↑</a></footer></main>
+<script>
+(function(root){
+'use strict';
+const V=6, INF=Infinity;
+const EDGES=[[0,1,4],[0,2,15],[0,5,30],[1,2,3],[1,3,8],[2,3,2],[2,4,9],[3,4,2],[3,5,10],[4,5,3]];
+const mat=(n,val)=>Array.from({length:n},()=>Array(n).fill(val));
+const copy=a=>a.map(r=>r.slice());
+const snapshot=(D,P,N,M)=>({D:copy(D),P:copy(P),N:copy(N),M:copy(M)});
+const label=i=>i+1;
+const fmt=v=>Number.isFinite(v)?String(v):'∞';
+function floyd(n=V,edges=EDGES){
+ const D=mat(n,INF),P=mat(n,-1),N=mat(n,-1),M=mat(n,-1);
+ for(let i=0;i<n;i++){D[i][i]=0;N[i][i]=i;}
+ for(const [i,j,w] of edges){if(w<D[i][j]){D[i][j]=w;P[i][j]=i;N[i][j]=j;}}
+ const first=snapshot(D,P,N,M), events=[{state:first,event:null,changes:0,checks:0}];
+ let changes=0, checks=0;
+ for(let k=0;k<n;k++)for(let i=0;i<n;i++)for(let j=0;j<n;j++){
+  const old=D[i][j],left=D[i][k],right=D[k][j],candidate=left+right;
+  const improved=Number.isFinite(left)&&Number.isFinite(right)&&candidate<old;
+  const event={i,j,k,old,left,right,candidate,improved,before:events[events.length-1].state};
+  if(improved){D[i][j]=candidate;P[i][j]=P[k][j];N[i][j]=N[i][k];M[i][j]=k;changes++;}
+  checks++;
+  events.push({state:improved?snapshot(D,P,N,M):events[events.length-1].state,event,changes,checks});
+ }
+ return {first,events,final:events[events.length-1].state,n};
+}
+function affected(s,i,j){return s.D.some((row,t)=>row[t]<0&&Number.isFinite(s.D[i][t])&&Number.isFinite(s.D[t][j]));}
+function traces(s,src,dst,method){
+ const n=s.D.length;
+ const steps=[];
+ const add=(lookup,path,message,detail,done=false,focus=[],route=null)=>steps.push({lookup,path:path.slice(),message,detail,done,focus,route:route?route.slice():(method==='P'?path.slice().reverse():path.slice())});
+ if(affected(s,src,dst)){add(null,[],'Không có cực tiểu hữu hạn','Cặp đỉnh bị ảnh hưởng bởi chu trình âm.',true);return steps;}
+ if(!Number.isFinite(s.D[src][dst])){add([src,dst],[],'D = ∞','Không tồn tại đường đi giữa hai đỉnh.',true,[src,dst]);return steps;}
+ if(src===dst){add([src,dst],[src],'Nguồn = đích','Đường đi rỗng cạnh, trọng số 0.',true,[src]);return steps;}
+ if(method==='P'){
+  let cur=dst,path=[dst]; add(null,path,`Bắt đầu tại ${label(dst)}`,`Giữ hàng ${label(src)}, đi ngược về nguồn.`,false,[dst]);
+  for(let count=0;cur!==src;count++){
+   if(count>=n||s.P[src][cur]<0)throw Error('Invalid predecessor chain');
+   const last=cur,p=s.P[src][cur];path.push(p);cur=p;
+   add([src,last],path,`P[${label(src)}][${label(last)}] = ${label(p)}`,`Đỉnh đứng trước ${label(last)} là ${label(p)}.`,false,[last,p]);
+  }
+  add(null,path, 'Đảo ngược danh sách','Đã đến nguồn; đảo danh sách để thu được đường đi theo chiều cạnh.',true,[src,dst]);
+ }else if(method==='N'){
+  let cur=src,path=[src];add(null,path,`Bắt đầu tại ${label(src)}`,`Giữ cột ${label(dst)}, đi xuôi về đích.`,false,[src]);
+  for(let count=0;cur!==dst;count++){
+   if(count>=n||s.N[cur][dst]<0)throw Error('Invalid next-hop chain');
+   const last=cur,p=s.N[cur][dst];path.push(p);cur=p;
+   add([last,dst],path,`N[${label(last)}][${label(dst)}] = ${label(p)}`,`Bước tiếp theo từ ${label(last)} là ${label(p)}.`,cur===dst,[last,p]);
+  }
+ }else{
+  const path=[src];let calls=0;
+  add(null,path,`trace(${label(src)}, ${label(dst)})`,'Chia đường đi theo đỉnh trung gian được lưu.',false,[src,dst]);
+  function expand(i,j){
+   if(++calls>2*n+1)throw Error('Invalid intermediate recursion');
+   if(i===j)return;
+   const k=s.M[i][j];
+   if(k===-1){path.push(j);add([i,j],path,`M[${label(i)}][${label(j)}] = −1`,`Không cần chia: ghi cạnh ${label(i)} → ${label(j)}.`,false,[i,j]);return;}
+   add([i,j],path,`M[${label(i)}][${label(j)}] = ${label(k)}`,`Chia (${label(i)}, ${label(j)}) thành (${label(i)}, ${label(k)}) và (${label(k)}, ${label(j)}).`,false,[i,k,j]);
+   expand(i,k);expand(k,j);
+  }
+  expand(src,dst);add(null,path,'Ghép xong hai nhánh','Đọc danh sách từ nguồn đến đích; không lặp đỉnh phân chia.',true,[src,dst]);
+ }
+ return steps;
+}
+function path(s,i,j,method='N'){return traces(s,i,j,method).at(-1).route;}
+const API={V,EDGES,fmt,floyd,affected,traces,path};
+if(typeof module!=='undefined'&&module.exports)module.exports=API;else root.FloydEngine=API;
+})(typeof window!=='undefined'?window:globalThis);
+
+</script><script>
+'use strict';
+const {V,EDGES,fmt,floyd,traces,path}=FloydEngine;
+const $=id=>document.getElementById(id), label=i=>i+1;
+const {events,final}=floyd();
+const names={P:'Predecessor',N:'Next-Hop',M:'Intermediate'}, directions={P:'TRUY NGƯỢC · HÀNG NGUỒN',N:'TRUY XUÔI · CỘT ĐÍCH',M:'ĐỆ QUY · CHIA ĐƯỜNG'};
+const nodes=[[61,143],[180,62],[318,62],[318,229],[470,229],[598,143]];
+const edgeStyles={
+ '0,1':{label:[112,87]},'0,2':{bend:[162,-70],label:[164,15]},'0,5':{bend:[326,420],label:[331,284]},'1,2':{label:[250,43]},'1,3':{label:[230,148]},'2,3':{label:[341,141]},'2,4':{label:[411,129]},'3,4':{label:[396,247]},'3,5':{bend:[494,102],label:[488,138]},'4,5':{label:[544,210]}
+};
+function lineGeometry(i,j,bend){
+ const a=nodes[i],b=nodes[j],p=bend||b,q=bend||a;
+ const d1=Math.hypot(p[0]-a[0],p[1]-a[1]),d2=Math.hypot(q[0]-b[0],q[1]-b[1]);
+ const s=[a[0]+23*(p[0]-a[0])/d1,a[1]+23*(p[1]-a[1])/d1];
+ const e=[b[0]+25*(q[0]-b[0])/d2,b[1]+25*(q[1]-b[1])/d2];
+ return `M${s.join(',')} ${bend?`Q${bend.join(',')} ${e.join(',')}`:`L${e.join(',')}`}`;
+}
+const pairs=p=>new Set(p.slice(1).map((v,i)=>`${p[i]},${v}`));
+function graph(id,route=[],old=[],focus=[],mid=-1,roles={}){
+ const active=pairs(route),previous=pairs(old),high=new Set([...route,...focus]);
+ let svg=`<defs><marker id="${id}a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L8 4L0 8z" fill="#aeb6c1"/></marker><marker id="${id}b" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10z" fill="#315bc3"/></marker></defs>`;
+ for(const [i,j,w] of EDGES){const key=`${i},${j}`,g=edgeStyles[key],a=active.has(key),o=previous.has(key)&&!a;svg+=`<path d="${lineGeometry(i,j,g.bend)}" class="edge ${a?'active':o?'old':''}" marker-end="url(#${id}${a?'b':'a'})"/>`;}
+ for(const [i,j,w] of EDGES){const key=`${i},${j}`,g=edgeStyles[key];svg+=`<text class="weight ${active.has(key)?'active':''}" x="${g.label[0]}" y="${g.label[1]}">${w}</text>`;}
+ for(let i=0;i<V;i++){const [x,y]=nodes[i],cls=i===mid?'middle':high.has(i)?'hot':'';svg+=`<circle class="vertex ${cls}" cx="${x}" cy="${y}" r="21"/><text class="vertex-label ${i===mid?'middle':''}" x="${x}" y="${y}">${label(i)}</text>`;if(roles[i])svg+=`<text class="graph-role" x="${x}" y="${y+38}">${roles[i]}</text>`;}
+ $(id).innerHTML=svg;
+}
+function matrix(a,kind,target=null,refs=[],query=null){
+ let out='<table class="matrix"><thead><tr><th scope="col">i/j</th>';
+ for(let j=0;j<V;j++)out+=`<th scope="col">${label(j)}</th>`;out+='</tr></thead><tbody>';
+ for(let i=0;i<V;i++){out+=`<tr><th scope="row">${label(i)}</th>`;for(let j=0;j<V;j++){
+  const value=a[i][j],text=kind==='D'?fmt(value):value===-1?'−':label(value),isTarget=target&&i===target[0]&&j===target[1],ref=refs.some(([x,y])=>x===i&&y===j),axis=query&&(kind==='P'&&i===query[0]||kind==='N'&&j===query[1]);
+  out+=`<td class="${text==='−'||text==='∞'?'empty ':''}${isTarget?'target ':ref?'ref ':''}${axis?'axis':''}">${text}</td>`;
+ }out+='</tr>';}return out+'</tbody></table>';
+}
+function controller(prefix,draw,onEnd){
+ let index=0,max=0,timer=null;
+ const stop=()=>{if(timer!==null){clearInterval(timer);timer=null;} updateButton();};
+ const updateButton=()=>{$(prefix+'Play').textContent=timer!==null?'Ⅱ Tạm dừng':prefix==='f'?'▶ Phát':'▶ Truy vết';};
+ function set(i){index=Math.max(0,Math.min(max,i));$(prefix+'Range').value=index;$(prefix+'Prev').disabled=index===0;$(prefix+'Next').disabled=index===max;draw(index,max);if(index===max&&timer!==null){stop();if(onEnd)onEnd();}}
+ function play(){if(timer!==null){stop();return;}if(index===max)set(0);if(max===0)return;timer=setInterval(()=>set(index+1),Number($(prefix+'Speed').value));updateButton();}
+ $(prefix+'Play').addEventListener('click',play);$(prefix+'Prev').addEventListener('click',()=>{stop();set(index-1);});$(prefix+'Next').addEventListener('click',()=>{stop();set(index+1);});$(prefix+'Reset').addEventListener('click',()=>{stop();set(0);});$(prefix+'End').addEventListener('click',()=>{stop();set(max);});$(prefix+'Range').addEventListener('input',e=>{stop();set(Number(e.target.value));});$(prefix+'Speed').addEventListener('change',()=>{if(timer!==null){stop();play();}});
+ return {set,stop,get index(){return index;},configure(n,i=0){stop();max=n;$(prefix+'Range').max=n;set(i);}};
+}
+let activeMethod='P',frames=events.filter(x=>!x.event||x.event.improved);frames.push(events.at(-1));
+function displayF(i,max){
+ const f=frames[i],e=f.event,s=f.state,last=i===max;
+ $('stepCount').textContent=`${i} / ${max}`;$('stats').textContent=`${f.checks}/${V**3} so sánh · ${f.changes} cập nhật`;
+ let target=null,refs=[],ar=[],candidatePath=[],oldPath=[],focus=[],mid=-1,roles={};
+ if(!e){$('phaseLabel').textContent='Khởi tạo · k = 0';$('fExplain').innerHTML='<strong>Chưa cho phép đỉnh trung gian nào.</strong> D chỉ chứa cạnh trực tiếp. Các ma trận bổ trợ được khởi tạo theo định nghĩa tương ứng.';}
+ else if(last&&!$('allSteps').checked){$('phaseLabel').textContent='Hoàn thành · k = 6';$('fExplain').innerHTML='<strong>Đã xét mọi đỉnh trung gian.</strong> Ma trận D chứa khoảng cách ngắn nhất cho mọi cặp đỉnh. Ma trận bổ trợ hiện lưu đủ thông tin để truy vết. <a href="#trace">Thử truy vết →</a>';}
+ else{
+  const {i:a,j:b,k,old,left,right,candidate,improved,before}=e;target=[a,b];refs=[[a,k],[k,b]];ar=activeMethod==='P'?[[k,b]]:activeMethod==='N'?[[a,k]]:[];mid=k;focus=[a,b,k];for(const [v,r] of [[a,'i'],[b,'j'],[k,'k']])roles[v]=roles[v]?roles[v]+'/'+r:r;
+  if(Number.isFinite(candidate)){const x=path(before,a,k),y=path(before,k,b);candidatePath=x.concat(y.slice(1));}if(Number.isFinite(old))oldPath=path(before,a,b);
+  $('phaseLabel').textContent=`k = ${label(k)} · i = ${label(a)} · j = ${label(b)}`;
+  const calculation=`D[${label(a)}][${label(k)}] + D[${label(k)}][${label(b)}] = ${fmt(left)} + ${fmt(right)} = ${fmt(candidate)}`;
+  let detail=improved?`Cập nhật D[${label(a)}][${label(b)}]: ${fmt(old)} → ${fmt(candidate)}.`:!Number.isFinite(candidate)?'Một trong hai đoạn không tồn tại; bỏ qua.':`Ứng viên không nhỏ hơn ${fmt(old)}; giữ nguyên.`;
+  if(improved){const rhs=activeMethod==='P'?`P[${label(k)}][${label(b)}]`:activeMethod==='N'?`N[${label(a)}][${label(k)}]`:`${label(k)}`;detail+=` ${activeMethod}[${label(a)}][${label(b)}] ← ${rhs} = ${label(s[activeMethod][a][b])}.`;}
+  $('fExplain').innerHTML=`<strong class="status">${improved?'Tìm thấy đường ngắn hơn':'Không cập nhật'}</strong><div class="calc">${calculation}</div>${detail}`;
+ }
+ graph('graphF',candidatePath,oldPath,focus,mid,roles);
+ $('distMatrix').innerHTML=matrix(s.D,'D',target,refs);$('auxMatrix').innerHTML=matrix(s[activeMethod],activeMethod,target,ar);$('auxTitle').innerHTML=`Ma trận ${names[activeMethod]} <code>${activeMethod}</code>`;
+ $('auxExplain').textContent=activeMethod==='P'?'P[i][j] = đỉnh ngay trước j; ô tô nhạt là P[k][j], nếu có cập nhật.':activeMethod==='N'?'N[i][j] = đỉnh ngay sau i; ô tô nhạt là N[i][k], nếu có cập nhật.':'M[i][j] = đỉnh trung gian ở lần cải thiện gần nhất; ô − không cần chia (kiểm tra D để biết có đường đi).';
+}
+const fControl=controller('f',displayF);fControl.configure(frames.length-1);
+$('methodTabs').addEventListener('click',e=>{const btn=e.target.closest('[data-method]');if(!btn)return;activeMethod=btn.dataset.method;for(const b of $('methodTabs').querySelectorAll('button'))b.setAttribute('aria-selected',b===btn?'true':'false');displayF(fControl.index,frames.length-1);});
+$('allSteps').addEventListener('change',()=>{const prev=frames[fControl.index].checks;frames=$('allSteps').checked?events:events.filter(x=>!x.event||x.event.improved).concat(events.at(-1));const idx=frames.findIndex(x=>x.checks>=prev);fControl.configure(frames.length-1,idx<0?frames.length-1:idx);});
+let selected='P',source=0,dest=5,queries={};
+for(let i=0;i<V;i++)for(const id of ['src','dst'])$(id).add(new Option(String(label(i)),i));$('src').value=source;$('dst').value=dest;
+function prepareTrace(){
+ source=Number($('src').value);dest=Number($('dst').value);queries=Object.fromEntries(['P','N','M'].map(k=>[k,traces(final,source,dest,k)]));
+ $('queryLabel').textContent=`${label(source)} → ${label(dest)}`;$('queryDist').textContent=fmt(final.D[source][dest]);const route=queries.N.at(-1).route;$('queryPath').textContent=route.length?route.map(label).join(' → '):'Không tồn tại';
+ tControl.configure(Math.max(...Object.values(queries).map(a=>a.length))-1);
+}
+function displayT(i,max){
+ $('traceStep').textContent=`${i} / ${max}`;const s=queries[selected][Math.min(i,queries[selected].length-1)];
+ const roles=source===dest?{[source]:'s = t'}:{[source]:'nguồn',[dest]:'đích'};graph('graphT',s.route,[],s.focus,-1,roles);$('graphMethod').textContent=names[selected].toUpperCase();
+ const container=$('traceCards');const hadFocus=container.contains(document.activeElement)?document.activeElement.closest('[data-trace]')?.dataset.trace:null;
+ container.innerHTML=['P','N','M'].map(k=>{const frames=queries[k],f=frames[Math.min(i,frames.length-1)],text=f.path.length?f.path.map(label).join(k==='P'&&!f.done?' ← ':' → '):'—',show=k==='P'&&f.done?f.route.map(label).join(' → '):text;
+  return `<article class="trace-card ${selected===k?'selected':''}" role="button" tabindex="0" aria-pressed="${selected===k}" data-trace="${k}"><h4>${names[k]} · ${k}</h4><div class="direction">${directions[k]}</div>${matrix(final[k],k,f.lookup,[],[source,dest])}<div class="trace-status">${f.message}</div><div class="trace-path">${show}</div><p class="trace-desc">${f.detail}</p></article>`;
+ }).join('');if(hadFocus)container.querySelector(`[data-trace="${hadFocus}"]`)?.focus({preventScroll:true});
+}
+const tControl=controller('t',displayT);prepareTrace();for(const id of ['src','dst'])$(id).addEventListener('change',prepareTrace);
+function pickTrace(e){const el=e.target.closest('[data-trace]');if(!el)return;selected=el.dataset.trace;displayT(tControl.index,Math.max(...Object.values(queries).map(a=>a.length))-1);}
+$('traceCards').addEventListener('click',pickTrace);$('traceCards').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickTrace(e);}});
+
+
+</script>
+<script src="all-paths.js"></script>
+<script src="all-paths-ui.js"></script>
+</body></html>
