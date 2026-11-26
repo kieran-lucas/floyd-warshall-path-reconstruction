@@ -3,7 +3,7 @@
  'use strict';
  const $=id=>doc.getElementById(id), n=6, {fmt,vertex,setText,routeText}=E;
  const names={D:'Khoảng cách',W:'Trọng số gốc',P:'Predecessor',N:'Next-Hop',M:'Intermediate',H:'Next-Hop Set',T:'Tight Edges'};
- const defs={D:'D[i][j] = tổng trọng số ngắn nhất hiện biết.',W:'W[i][j] = trọng số cạnh trực tiếp; ∞ nếu không có cạnh (kể cả đường chéo).',P:'P[i][j] = đỉnh ngay trước j; — nếu không có predecessor.',N:'N[i][j] = đỉnh ngay sau i; N[i][i] = i.',M:'M[i][j] = đỉnh chia đường ở lần cải thiện cuối; — nếu không cần chia hoặc không có đường.',H:'H[i][j] = tập bước đầu tiên đồng hạng; ∅ nếu không có bước tiếp.',T:'Chỉ dùng W và D. Kiểm tra W[u][v] + D[v][t] = D[u][t].'};
+ const defs={D:'D[i][j] = tổng trọng số ngắn nhất hiện biết.',W:'W[i][j] = trọng số cạnh trực tiếp; ∞ nếu không có cạnh (kể cả đường chéo).',P:'P[i][j] = đỉnh ngay trước j; - nếu không có predecessor.',N:'N[i][j] = đỉnh ngay sau i; N[i][i] = i.',M:'M[i][j] = đỉnh chia đường ở lần cải thiện cuối; - nếu không cần chia hoặc không có đường.',H:'H[i][j] = tập bước đầu tiên đồng hạng; ∅ nếu không có bước tiếp.',T:'Chỉ dùng W và D. Kiểm tra W[u][v] + D[v][t] = D[u][t].'};
  let dataset='tie',model=E.build(n,E.DATA[dataset].edges),mode='trace',method='H',s=0,t=5,showAll=true,filter=true,buildPos=0,tracePos=0,result,selected=-1,timer=null,frames=[];
  const changeFilter=()=>{frames=filter?model.frames.filter((x,i)=>i===0||i===model.frames.length-1||x.event.improved||x.event.tied):model.frames;};
  const pos=()=>mode==='build'?buildPos:tracePos;
@@ -47,7 +47,7 @@
     const read=lookup.some(([k,u,v])=>k===kind&&u===i&&v===j),ref=refs.some(([k,u,v])=>k===kind&&u===i&&v===j);
     const changed=mode==='build'&&ev&&target&&kind!=='W'&&val(kind,oldVal[kind][i][j])!==str;
     const axis=mode==='trace'&&((kind==='P'&&i===s)||(['N','H','D'].includes(kind)&&j===t));
-    const cls=[target?'mlTarget':'',read?'mlRead':'',ref?'mlRef':'',changed?'mlChanged':'',axis?'mlAxisCell':'',str==='∞'||str==='—'||str==='∅'?'mlEmpty':''].join(' ');
+    const cls=[target?'mlTarget':'',read?'mlRead':'',ref?'mlRef':'',changed?'mlChanged':'',axis?'mlAxisCell':'',str==='∞'||str==='-'||str==='∅'?'mlEmpty':''].join(' ');
     const cellTitle=kind+'['+vertex(i)+']['+vertex(j)+'] = '+str+(changed?' (trước: '+val(kind,oldVal[kind][i][j])+')':'');
     html+='<td class="'+cls+'" title="'+cellTitle+'">'+(mode==='trace'?'<button type="button" data-cell="'+kind+','+i+','+j+'" aria-label="'+cellTitle+'">'+str+'</button>':str)+'</td>';
    }
@@ -69,13 +69,13 @@
    const frame=frames[buildPos];state=frame.state;previous=model.frames[Math.max(0,frame.step-1)].state;ev=frame.event;
    $('mlPhase').textContent='Phép so sánh '+frame.step+' / '+n**3+' · '+frame.changes+' giảm D · '+frame.ties+' hợp tập H';
    if(!ev){
-    $('mlExplain').innerHTML='<strong>Khởi tạo D = W, đường chéo D[i][i] = 0.</strong><div class="mlCalc">P = nguồn của cạnh trực tiếp · N = đích · M = — · H = {đích}</div>Chưa sử dụng bất kỳ đỉnh trung gian nào.';
+    $('mlExplain').innerHTML='<strong>Khởi tạo D = W, đường chéo D[i][i] = 0.</strong><div class="mlCalc">P = nguồn của cạnh trực tiếp · N = đích · M = - · H = {đích}</div>Chưa sử dụng bất kỳ đỉnh trung gian nào.';
     graph();
    }else{
     const {i,j,k,old,left,right,candidate,improved,tied,prev,read}=ev;
     refs=[['D',i,k],['D',k,j],['P',k,j],['N',i,k],['H',i,k]];
     const finite=Number.isFinite(candidate);
-    const verdict=improved?'ĐƯỜNG NGẮN HƠN — cập nhật D, P, N, M, H':tied?'ĐỒNG HẠNG — chỉ hợp thêm lựa chọn vào H':!finite?'KHÔNG CÓ ĐƯỜNG QUA k':'GIỮ NGUYÊN — không có cải thiện';
+    const verdict=improved?'ĐƯỜNG NGẮN HƠN - cập nhật D, P, N, M, H':tied?'ĐỒNG HẠNG - chỉ hợp thêm lựa chọn vào H':!finite?'KHÔNG CÓ ĐƯỜNG QUA k':'GIỮ NGUYÊN - không có cải thiện';
     const next=state[method]?.[i]?.[j],rule=method==='P'?'P[i][j] ← P[k][j]':method==='N'?'N[i][j] ← N[i][k]':method==='M'?'M[i][j] ← k':method==='H'?(improved?'H[i][j] ← copy(H[i][k])':tied?'H[i][j] ← H[i][j] ∪ H[i][k]':'H[i][j] giữ nguyên'):'Không lưu ma trận bổ trợ';
     $('mlExplain').innerHTML='<strong>'+verdict+'</strong><div class="mlCalc">k = '+vertex(k)+' · i = '+vertex(i)+' · j = '+vertex(j)+'</div><div class="mlCalc">D['+vertex(i)+']['+vertex(k)+'] + D['+vertex(k)+']['+vertex(j)+'] = '+fmt(left)+' + '+fmt(right)+' = '+fmt(candidate)+'; D['+vertex(i)+']['+vertex(j)+']: '+fmt(old)+' → '+fmt(state.D[i][j])+'</div><div class="mlCalc">'+(method==='T'?rule:((improved||method==='H'&&tied)?rule:'Không cập nhật '+method)+' · '+val(method,prev[method])+' → '+val(method,next))+'</div>';
     let route=[];
@@ -87,7 +87,7 @@
    $('mlPhase').textContent='D đã hoàn tất · '+names[method]+' · '+vertex(s)+' → '+vertex(t);
    const route=selected>=0?result.paths[selected]:f.route;
    if(selected>=0)lookup=[['D',s,t]];
-   $('mlExplain').innerHTML='<strong>'+(selected>=0?'Đường '+(selected+1)+' / '+result.paths.length+' · '+routeText(route):f.message)+'</strong><div class="mlCalc">'+(selected>=0?'Tổng trọng số: '+fmt(result.distance):'Nhánh hiện tại: '+(route.length?routeText(route):'—')+(f.sequence?' · Thứ tự đọc: '+f.sequence:'')+(f.depth!==undefined?' · Độ sâu đệ quy: '+f.depth:''))+'</div>';
+   $('mlExplain').innerHTML='<strong>'+(selected>=0?'Đường '+(selected+1)+' / '+result.paths.length+' · '+routeText(route):f.message)+'</strong><div class="mlCalc">'+(selected>=0?'Tổng trọng số: '+fmt(result.distance):'Nhánh hiện tại: '+(route.length?routeText(route):'-')+(f.sequence?' · Thứ tự đọc: '+f.sequence:'')+(f.depth!==undefined?' · Độ sâu đệ quy: '+f.depth:''))+'</div>';
    graph(route,f.focus||[s,t],-1,selected>=0?null:f.candidate,f.tight);
    $('mlDistance').textContent=fmt(result.distance);$('mlCount').textContent=result.paths.length;
    $('mlFound').textContent=selected>=0?result.paths.length:f.found;
@@ -100,8 +100,8 @@
   $('mlMatrices').innerHTML=order.map(k=>matrix(k,data[k],lookup,refs,previous,ev)).join('');
   $('mlExtraWrap').hidden=!showAll;$('mlExtraMatrices').innerHTML=showAll?extra.map(k=>matrix(k,data[k],lookup,refs,previous,ev)).join(''):'';
   $('mlCrossCheck').hidden=mode!=='trace';
-  if(mode==='trace'){const methods=['P','N','M','H','T'],checks=methods.map(k=>E.path(model,s,t,k));const sig=x=>x.paths.map(p=>p.join(',')).sort().join('|');const ok=sig(checks[3])===sig(checks[4])&&checks.every(x=>x.distance===result.distance);$('mlCrossCheck').innerHTML='<h3>Đối chiếu cả 5 phương án</h3><p>'+(ok?'✓ Cả năm phương án thống nhất về khoảng cách; H và T cho cùng tập đường đi.':'Kết quả không nhất quán.')+'</p><div class="mlCrossGrid">'+methods.map((k,i)=>'<div><small>'+k+' · '+names[k]+'</small><strong>'+checks[i].paths.length+'</strong><span>'+ (i<3?(checks[i].paths[0]?routeText(checks[i].paths[0]):'—'):'đường ngắn nhất đơn')+'</span></div>').join('')+'</div>';}
-  $('mlMatrixHelp').textContent=mode==='build'?'Xanh dương: ô đang xét · tím: ô tham chiếu · xanh lá: ô vừa đổi.':'Bấm một ô bất kỳ để truy vấn i → j. Xanh dương: ô nguồn–đích hoặc ô đang đọc.';
+  if(mode==='trace'){const methods=['P','N','M','H','T'],checks=methods.map(k=>E.path(model,s,t,k));const sig=x=>x.paths.map(p=>p.join(',')).sort().join('|');const ok=sig(checks[3])===sig(checks[4])&&checks.every(x=>x.distance===result.distance);$('mlCrossCheck').innerHTML='<h3>Đối chiếu cả 5 phương án</h3><p>'+(ok?'✓ Cả năm phương án thống nhất về khoảng cách; H và T cho cùng tập đường đi.':'Kết quả không nhất quán.')+'</p><div class="mlCrossGrid">'+methods.map((k,i)=>'<div><small>'+k+' · '+names[k]+'</small><strong>'+checks[i].paths.length+'</strong><span>'+ (i<3?(checks[i].paths[0]?routeText(checks[i].paths[0]):'-'):'đường ngắn nhất đơn')+'</span></div>').join('')+'</div>';}
+  $('mlMatrixHelp').textContent=mode==='build'?'Xanh dương: ô đang xét · tím: ô tham chiếu · xanh lá: ô vừa đổi.':'Bấm một ô bất kỳ để truy vấn i → j. Xanh dương: ô nguồn-đích hoặc ô đang đọc.';
   $('mlMethodHint').textContent=defs[method];
  }
  $('mlDataset').onchange=resetDataset;

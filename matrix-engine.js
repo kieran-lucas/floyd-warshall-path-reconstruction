@@ -1,4 +1,4 @@
-/* Matrix-first Floyd–Warshall laboratory: independent engine. */
+/* Matrix-first Floyd-Warshall laboratory: independent engine. */
 (function(root){const api=(function matrixEngine(){
  const BASE=[[0,1,4],[0,2,15],[0,5,30],[1,2,3],[1,3,8],[2,3,2],[2,4,9],[3,4,2],[3,5,10],[4,5,3]];
  const TIE=BASE.map(([u,v,w])=>[u,v,({"0,2":7,"1,3":5,"2,4":4,"3,5":5})[u+','+v]??w]);
@@ -6,7 +6,7 @@
  const mat=(n,f)=>Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>f(i,j)));
  const sorted=a=>[...new Set(a)].sort((a,b)=>a-b);
  const fmt=v=>v===Infinity?'∞':v===-Infinity?'−∞':String(v);
- const vertex=v=>v===-1?'—':String(v+1);
+ const vertex=v=>v===-1?'-':String(v+1);
  const setText=a=>a.length?'{'+a.map(vertex).join(',')+'}':'∅';
  const routeText=a=>a.map(vertex).join(' → ');
  function build(n,edges){

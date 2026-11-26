@@ -2,19 +2,19 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Truy vết đường đi với Floyd–Warshall</title>
-<meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ sáu đỉnh và mã Java.">
+<title>Truy vết đường đi với Floyd-Warshall</title>
+<meta name="description" content="Truy vết Floyd-Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ sáu đỉnh và mã Java.">
 <link rel="stylesheet" href="lesson.css?v=audit1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=audit1"></script>
 </head>
 <body><main>
-<header><h1>Truy vết đường đi với Floyd–Warshall</h1></header>
+<header><h1>Truy vết đường đi với Floyd-Warshall</h1></header>
 <section id="problem"><h2>1. Bài toán</h2>
 <p>Dijkstra là thuật toán thường dùng để tìm đường đi ngắn nhất trên đồ thị có trọng số không âm. Chẳng hạn, chạy Dijkstra từ đỉnh 1 cho ta khoảng cách từ 1 đến các đỉnh còn lại. Kết quả ấy dùng được cho cả hai câu hỏi 1 → 3 và 1 → 4. Nhưng nếu đổi nguồn sang đỉnh 2, ta có thể phải chạy lại thuật toán.</p>
-<p>Khi có nhiều truy vấn với các đỉnh nguồn khác nhau, Floyd–Warshall cho phép tính trước khoảng cách ngắn nhất giữa mọi cặp đỉnh trong một lần chạy. Phiên bản cơ bản của thuật toán trả về ma trận khoảng cách; nếu muốn in ra dãy đỉnh của đường đi, ta cần khôi phục thông tin ấy. Ta sẽ tìm hiểu hai cách bổ sung ma trận lưu vết ngay trong quá trình tính Floyd. Floyd cũng xử lý được cạnh có trọng số âm; nếu một cặp đỉnh đi qua được chu trình âm thì cặp đó không có đường đi ngắn nhất hữu hạn.</p>
+<p>Khi có nhiều truy vấn với các đỉnh nguồn khác nhau, Floyd-Warshall cho phép tính trước khoảng cách ngắn nhất giữa mọi cặp đỉnh trong một lần chạy. Phiên bản cơ bản của thuật toán trả về ma trận khoảng cách; nếu muốn in ra dãy đỉnh của đường đi, ta cần khôi phục thông tin ấy. Ta sẽ tìm hiểu hai cách bổ sung ma trận lưu vết ngay trong quá trình tính Floyd. Floyd cũng xử lý được cạnh có trọng số âm; nếu một cặp đỉnh đi qua được chu trình âm thì cặp đó không có đường đi ngắn nhất hữu hạn.</p>
 </section>
-<section id="floyd"><h2>2. Ma trận khoảng cách của Floyd–Warshall</h2>
+<section id="floyd"><h2>2. Ma trận khoảng cách của Floyd-Warshall</h2>
 <p>Xét đồ thị có hướng gồm 6 đỉnh dưới đây. Gọi D là ma trận khoảng cách 6 × 6, với hàng là nguồn và cột là đích. Ban đầu, với hai đỉnh khác nhau, mỗi ô mang trọng số nhỏ nhất của cạnh trực tiếp (nếu có). Đường chéo bằng 0 trong đồ thị mẫu, còn ∞ nghĩa là chưa có cạnh nối theo chiều đó.</p>
-<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng — 6 đỉnh</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 480 238">
+<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng - 6 đỉnh</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 480 238">
 <title id="graph-title-initial">Đồ thị có hướng gồm 6 đỉnh. Các cạnh và trọng số: 1 → 2 (4), 1 → 3 (15), 1 → 4 (20), 2 → 3 (3), 2 → 4 (10), 3 → 4 (2), 3 → 6 (14), 4 → 5 (2), 4 → 6 (10), 5 → 6 (3).</title>
 <defs>
               <marker id="arrow-initial" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
@@ -47,7 +47,7 @@
             if D[i][k] != ∞ and D[k][j] != ∞:
                 D[i][j] = min(D[i][j], D[i][k] + D[k][j])</code></pre>
 </section>
-<section id="methods"><span id="code" aria-hidden="true"></span><h2>3. Các cách lưu vết cho Floyd–Warshall</h2>
+<section id="methods"><span id="code" aria-hidden="true"></span><h2>3. Các cách lưu vết cho Floyd-Warshall</h2>
 <p>Sau khi chạy Floyd, <code>D[1][4] = 9</code>. Làm thế nào để từ kết quả đó khôi phục được đường đi 1 → 2 → 3 → 4? Hãy trở lại lúc Floyd ghép đường từ 1 tới 3 với cạnh 3 → 4. Ta có thể ghi nhớ bước đầu của đường mới, hoặc đỉnh trung gian vừa dùng để nối hai đoạn. Hai cách lưu thông tin này dẫn đến hai cách truy vết khác nhau.</p>
 
 <div id="next-hop"><h3>Cách 1: Ma trận bước kế tiếp (Next-Hop Matrix)</h3>
@@ -124,7 +124,7 @@
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div></div>
 <div class="full-source" id="code-n">
-<h4>Chương trình Java hoàn chỉnh — Next-Hop</h4>
+<h4>Chương trình Java hoàn chỉnh - Next-Hop</h4>
 <p>Lưu vào tệp <code>FloydWarshallNextHop.java</code> hoặc <a class="source-download" href="FloydWarshallNextHop.java" download>Tải mã nguồn</a>. Chương trình chỉ sử dụng ma trận D và ma trận N để truy vết một đường đi ngắn nhất.</p>
 <pre><code id="java-n-source">import java.util.ArrayList;
 import java.util.Arrays;
@@ -299,7 +299,7 @@ N = [1, 2, 3, 4, 5, 6]</code></pre>
   <noscript><p>Bật JavaScript để chọn đỉnh và chạy từng bước.</p></noscript>
 </div>
 <div class="full-source" id="code-m">
-<h4>Chương trình Java hoàn chỉnh — Intermediate</h4>
+<h4>Chương trình Java hoàn chỉnh - Intermediate</h4>
 <p>Lưu vào tệp <code>FloydWarshallIntermediate.java</code> hoặc <a class="source-download" href="FloydWarshallIntermediate.java" download>Tải mã nguồn</a>. Chương trình chỉ sử dụng ma trận D và ma trận M để truy vết một đường đi ngắn nhất.</p>
 <pre><code id="java-m-source">import java.util.ArrayList;
 import java.util.Arrays;
@@ -417,13 +417,13 @@ M = [1, 2, 3, 4, 5, 6]</code></pre>
 <tr><th scope="row">Sau k = 3</th><td class="changed">9</td><td>2</td><td class="changed">3</td></tr></tbody></table>
 <p>Ở lượt k = 3, đường mới vẫn bắt đầu bằng cạnh 1 → 2, nên N[1][4] giữ nguyên. Điểm nối hai đoạn lại đổi thành đỉnh 3, nên M[1][4] nhận giá trị 3. Sự khác nhau này thể hiện rõ khi ta truy vết từ 1 đến 4.</p>
 <div class="trace-compare">
-<figure><figcaption>Next-Hop — truy xuôi theo từng bước</figcaption>
+<figure><figcaption>Next-Hop - truy xuôi theo từng bước</figcaption>
 <svg class="compare-diagram" role="img" aria-label="Đọc N[1][4] bằng 2, N[2][4] bằng 3 và N[3][4] bằng 4" viewBox="0 0 420 174"><defs><marker id="compare-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L7 3.5L0 7Z" fill="#174e86"/></marker></defs>
 <g class="compare-arrow" marker-end="url(#compare-arrow)"><path d="M51 83H136"/><path d="M163 83H248"/><path d="M275 83H360"/></g>
 <g class="compare-label"><text x="94" y="57">N[1][4]</text><text x="206" y="57">N[2][4]</text><text x="318" y="57">N[3][4]</text></g>
 <g class="compare-node"><circle cx="37" cy="83" r="14"/><circle cx="149" cy="83" r="14"/><circle cx="261" cy="83" r="14"/><circle cx="373" cy="83" r="14"/><text x="37" y="83">1</text><text x="149" y="83">2</text><text x="261" y="83">3</text><text x="373" y="83">4</text></g><text class="compare-label" x="205" y="128">Giữ nguyên cột đích 4</text></svg>
 <p>Đọc ba ô N và nối các bước theo thứ tự.</p></figure>
-<figure><figcaption>Intermediate — phân chia rồi ghép đoạn</figcaption>
+<figure><figcaption>Intermediate - phân chia rồi ghép đoạn</figcaption>
 <svg class="compare-diagram" role="img" aria-label="M[1][4] bằng 3: chia thành 1 đến 3 và 3 đến 4. M[1][3] bằng 2: chia thành 1 đến 2 và 2 đến 3." viewBox="0 0 420 174">
 <g class="compare-branch"><path d="M210 44L113 70M210 44L325 70M113 104L55 131M113 104L173 131"/></g>
 <g class="compare-split"><rect x="162" y="7" width="96" height="37" rx="4"/><rect x="65" y="67" width="96" height="37" rx="4"/><text x="210" y="19">(1, 4)</text><text class="compare-sub" x="210" y="33">k = 3</text><text x="113" y="79">(1, 3)</text><text class="compare-sub" x="113" y="93">k = 2</text></g>
@@ -434,7 +434,7 @@ M = [1, 2, 3, 4, 5, 6]</code></pre>
 </section>
 
 <section id="trade-offs"><h2>5. Ưu và nhược điểm của hai phương pháp</h2>
-<p>Hai phương pháp cùng mở rộng Floyd–Warshall bằng một ma trận lưu vết. Sự khác biệt chủ yếu nằm ở cách sử dụng ma trận sau khi đã tính xong khoảng cách. Gọi V là số đỉnh của đồ thị và L là số cạnh trên đường đi ngắn nhất được chọn.</p>
+<p>Hai phương pháp cùng mở rộng Floyd-Warshall bằng một ma trận lưu vết. Sự khác biệt chủ yếu nằm ở cách sử dụng ma trận sau khi đã tính xong khoảng cách. Gọi V là số đỉnh của đồ thị và L là số cạnh trên đường đi ngắn nhất được chọn.</p>
 
 <h3>5.1. So sánh chi phí</h3>
 <table class="compare" aria-label="So sánh chi phí của Next-Hop và Intermediate Matrix">
@@ -446,15 +446,15 @@ M = [1, 2, 3, 4, 5, 6]</code></pre>
 <tr><th scope="row">Truy vết toàn bộ đường đi</th><td>Θ(L + 1)</td><td>Θ(L + 1)</td></tr>
 <tr><th scope="row">Bộ nhớ phụ khi truy vết</th><td>Θ(1)</td><td>O(L), do ngăn xếp đệ quy</td></tr>
 </tbody></table>
-<p>Chi phí trên xét cặp nguồn–đích khác nhau đã được xác định có đường đi ngắn nhất hữu hạn, không tính bộ nhớ dành cho danh sách kết quả (Θ(L + 1) ở cả hai cách). Trong hai chương trình Java ở trên, hàm <code>distance</code> còn duyệt V đỉnh để kiểm tra chu trình âm, nên một truy vấn đầy đủ mất O(V + L + 1) thời gian.</p>
+<p>Chi phí trên xét cặp nguồn-đích khác nhau đã được xác định có đường đi ngắn nhất hữu hạn, không tính bộ nhớ dành cho danh sách kết quả (Θ(L + 1) ở cả hai cách). Trong hai chương trình Java ở trên, hàm <code>distance</code> còn duyệt V đỉnh để kiểm tra chu trình âm, nên một truy vấn đầy đủ mất O(V + L + 1) thời gian.</p>
 
 <h3>5.2. Sự khác biệt khi truy vết</h3>
-<p><strong>Next-Hop Matrix.</strong> Với mỗi cạnh của đường đi, thuật toán chỉ cần đọc một ô N và chuyển sang đỉnh tiếp theo. Một đường có L cạnh tương ứng với L lần tra ma trận. Cách này thuận tiện khi cần in các đỉnh theo thứ tự, xác định ngay bước đi tiếp theo hoặc thực hiện nhiều truy vấn. Đổi lại, N chỉ lưu bước đầu tiên của đường đã chọn; nó không trực tiếp biểu diễn các điểm chia được tạo ra trong quá trình Floyd–Warshall.</p>
-<p><strong>Intermediate Matrix.</strong> M ghi lại chính đỉnh k dùng để ghép hai đoạn đường, nên cấu trúc lưu vết phản ánh trực tiếp phép truy hồi của Floyd–Warshall. Tuy nhiên, để dựng một đường có L ≥ 1 cạnh, hàm <code>appendSegment</code> thực hiện L − 1 lần phân chia và L lời gọi ứng với các cạnh trực tiếp, tổng cộng 2L − 1 lời gọi. Độ sâu đệ quy phụ thuộc vào cách các đoạn được chia; trong trường hợp xấu nhất, nó có thể tăng tuyến tính theo L. Vì vậy, dù độ phức tạp thời gian cùng bậc với Next-Hop, Intermediate có thêm chi phí gọi hàm và sử dụng ngăn xếp.</p>
+<p><strong>Next-Hop Matrix.</strong> Với mỗi cạnh của đường đi, thuật toán chỉ cần đọc một ô N và chuyển sang đỉnh tiếp theo. Một đường có L cạnh tương ứng với L lần tra ma trận. Cách này thuận tiện khi cần in các đỉnh theo thứ tự, xác định ngay bước đi tiếp theo hoặc thực hiện nhiều truy vấn. Đổi lại, N chỉ lưu bước đầu tiên của đường đã chọn; nó không trực tiếp biểu diễn các điểm chia được tạo ra trong quá trình Floyd-Warshall.</p>
+<p><strong>Intermediate Matrix.</strong> M ghi lại chính đỉnh k dùng để ghép hai đoạn đường, nên cấu trúc lưu vết phản ánh trực tiếp phép truy hồi của Floyd-Warshall. Tuy nhiên, để dựng một đường có L ≥ 1 cạnh, hàm <code>appendSegment</code> thực hiện L − 1 lần phân chia và L lời gọi ứng với các cạnh trực tiếp, tổng cộng 2L − 1 lời gọi. Độ sâu đệ quy phụ thuộc vào cách các đoạn được chia; trong trường hợp xấu nhất, nó có thể tăng tuyến tính theo L. Vì vậy, dù độ phức tạp thời gian cùng bậc với Next-Hop, Intermediate có thêm chi phí gọi hàm và sử dụng ngăn xếp.</p>
 <p>Ví dụ, với đường 1 → 2 → 3 → 4 ở phần 4, Next-Hop đọc ba ô N, còn Intermediate đọc năm ô M: hai ô chứa điểm chia và ba ô ứng với cạnh trực tiếp. Đây là số bước của cơ chế truy vết, không phải kết quả đo thời gian chạy.</p>
 
 <h3>5.3. Nên sử dụng phương pháp nào?</h3>
-<p>Nếu mục tiêu là khôi phục đường đi để sử dụng trong chương trình, Next-Hop thường là lựa chọn thuận tiện hơn nhờ truy vết tuần tự và không cần đệ quy. Intermediate có giá trị khi muốn biểu diễn đường đi dưới dạng các bài toán con, đặc biệt trong việc minh họa tư tưởng quy hoạch động. Cả hai đều giữ nguyên bậc độ phức tạp của Floyd–Warshall. Nếu cần liệt kê mọi đường ngắn nhất đồng hạng, phải mở rộng cách lưu vết để giữ nhiều lựa chọn.</p>
+<p>Nếu mục tiêu là khôi phục đường đi để sử dụng trong chương trình, Next-Hop thường là lựa chọn thuận tiện hơn nhờ truy vết tuần tự và không cần đệ quy. Intermediate có giá trị khi muốn biểu diễn đường đi dưới dạng các bài toán con, đặc biệt trong việc minh họa tư tưởng quy hoạch động. Cả hai đều giữ nguyên bậc độ phức tạp của Floyd-Warshall. Nếu cần liệt kê mọi đường ngắn nhất đồng hạng, phải mở rộng cách lưu vết để giữ nhiều lựa chọn.</p>
 </section>
 
 </main></body></html>

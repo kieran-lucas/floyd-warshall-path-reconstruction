@@ -1,4 +1,4 @@
-# Floyd–Warshall · Truy vết đường đi ngắn nhất
+# Floyd-Warshall · Truy vết đường đi ngắn nhất
 
 [Đọc bài và thử minh họa](https://kieran-lucas.github.io/floyd-warshall-path-reconstruction/)
 

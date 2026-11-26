@@ -1,4 +1,4 @@
-/* Floyd–Warshall: all shortest simple vertex paths, integer weights. */
+/* Floyd-Warshall: all shortest simple vertex paths, integer weights. */
 (function(root){
 const api=(function allPathsAPI(){
   'use strict';
