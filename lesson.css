@@ -1,6 +1,18 @@
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('fonts/SpaceGrotesk.ttf') format('truetype');
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/JetBrainsMono.ttf') format('truetype');
+  font-weight: 100 800;
+  font-display: swap;
+}
 :root {
-  --sans: 'Space Grotesk Variable', 'Space Grotesk', Arial, Helvetica, sans-serif;
-  --mono: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --sans: 'Space Grotesk', Arial, Helvetica, sans-serif;
+  --mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
   --ink: #26323e; --prose: #435269; --muted: #697b91; --line: #dfe4ea;
   --blue: #174e86; --blue-bg: #d9eaff; --blue-border: #5c99df;
   --green: #236347; --green-bg: #e8f7f0; --green-border: #a7ddc3;
@@ -16,7 +28,6 @@ section:last-child { margin-bottom: 8px; }
 h2 { font-size: 24px; letter-spacing: -.3px; line-height: 1.35; font-weight: 700; margin: 0 0 6px; }
 h3 { font: 600 15px/1.5 var(--sans); margin: 18px 0 9px; }
 p { max-width: 93ch; margin: 0 0 10px; color: var(--prose); font: 13.5px/1.75 var(--sans); }
-a { color: var(--blue); text-underline-offset: 3px; }
 code { font: 12px/1.5 var(--mono); background: #f0f3f7; color: #354457; border: 1px solid #e4e9ef; border-radius: 3px; padding: 1px 3px; overflow-wrap: anywhere; }
 pre { margin: 8px 0 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 5px; background: #f7f8fa; overflow-x: auto; }
 pre code { display: block; border: 0; background: none; font: 12px/1.65 var(--mono); padding: 0; white-space: pre; tab-size: 2; }
@@ -65,7 +76,7 @@ input, select { vertical-align: middle; }
 input { accent-color: var(--blue); }
 [data-action="play"] { min-width: 70px; color: white; background: var(--blue); border-color: var(--blue); }
 button:disabled { opacity: .4; cursor: default; }
-button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .player label { margin-left: 6px; }
 .player [data-role="count"] { font: 11px/1.5 var(--mono); margin-left: auto; color: var(--muted); }
 .drawing { min-width: 0; }
@@ -112,7 +123,3 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
   table, .views { break-inside: avoid; }
   pre { white-space: pre-wrap; overflow: visible; }
 }
-
-.implementation { margin: 6px 0 16px; }
-.implementation summary { width: fit-content; cursor: pointer; color: var(--blue); font-size: 13px; }
-.implementation summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }

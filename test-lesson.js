@@ -7,6 +7,12 @@ const { buildFrames, traceFrames } = require('./lesson.js');
 const read = file => fs.readFileSync(path.join(__dirname, file), 'utf8');
 const html = read('index.html');
 const java = read('FloydWarshallPaths.java');
+const listing = html.match(/<code id="java-source">([\s\S]*?)<\/code>/);
+assert.ok(listing, 'The complete Java program is printed in the article.');
+const escapedJava = java.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+assert.equal(listing[1], escapedJava);
+assert.doesNotMatch(html, /<details\b|role="tab(?:list|panel)?"/i);
+assert.doesNotMatch(html, /(?:href|src)\s*=\s*["'](?:https?:)?\/\//i);
 const diagrams = [...html.matchAll(/<svg class="route-graph"[\s\S]*?<\/svg>/g)].map(x => x[0]);
 assert.equal(diagrams.length, 3);
 const input = diagram => [...diagram.matchAll(/data-edge="(\d+),(\d+)"><path[^>]*\/><text[^>]*>(\d+)<\/text>/g)]

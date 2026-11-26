@@ -4,9 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Truy vết đường đi với Floyd–Warshall</title>
 <meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ bốn đỉnh và mã Java.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="lesson.css?v=reader2"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
+<link rel="stylesheet" href="lesson.css?v=inline3"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
 </head>
 <body><main>
 <header><h1>Truy vết đường đi với Floyd–Warshall</h1></header>
@@ -43,10 +41,8 @@
 
 <div id="next-hop"><h3>Cách thứ nhất</h3>
 <p>Giả sử ta viết các đỉnh lần lượt từ nguồn đến đích. Viết 1 xong, ta cần biết đỉnh nào đứng ngay sau 1. Đường tới 4 bắt đầu bằng đoạn từ 1 tới 3, mà đoạn này đi qua 2 trước. Vậy đỉnh tiếp theo cần viết là 2. Đứng ở 2, ta lại cần biết phải đi sang đâu để tới 4.</p>
-<p>Ta sẽ lập một <a href="https://staff.hnue.edu.vn/Portals/0/TeachingSubject/hongntcntt/07b6e3d3-6727-489d-a0c5-c81f5f24daa1ly-thuyet-do-thi---le-minh-hoang.pdf#search=PROG08_5.PAS" title="Lý thuyết đồ thị, Lê Minh Hoàng, mục thuật toán Floyd">ma trận bước kế tiếp</a>, đặt tên là <code>next</code>, để có thể tra bước đi đầu tiên cho bất kỳ cặp đỉnh nào. Trên hình, ma trận này được ký hiệu là N. Với cạnh trực tiếp i → j, ban đầu ta ghi <code>next[i][j] = j</code>. Sau đó, mỗi khi Floyd tìm được đường ngắn hơn qua k, bước đầu của đường từ i tới j cũng là bước đầu của đoạn từ i tới k.</p>
-<pre class="formula"><code>next[i][j] = next[i][k];</code></pre>
-<details class="implementation" id="next-code"><summary>Khởi tạo N và cập nhật trong vòng lặp Floyd</summary>
-<pre><code><span class="kw">int</span>[][] next = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
+<p>Ta sẽ lập một ma trận bước kế tiếp, đặt tên là <code>next</code>, để có thể tra bước đi đầu tiên cho bất kỳ cặp đỉnh nào. Trên hình, ma trận này được ký hiệu là N. Với cạnh trực tiếp i → j, ban đầu ta ghi <code>next[i][j] = j</code>. Sau đó, mỗi khi Floyd tìm được đường ngắn hơn qua k, bước đầu của đường từ i tới j cũng là bước đầu của đoạn từ i tới k.</p>
+<pre id="next-code"><code><span class="kw">int</span>[][] next = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
 <span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
     <span class="kw">Arrays</span>.fill(next[i], -1);
     next[i][i] = i;
@@ -67,7 +63,6 @@
         }
     }
 }</code></pre>
-</details>
 <p>Khi truy vết, đích vẫn là 4. Đọc <code>N[1][4] = 2</code> thì sang hàng 2, đọc <code>N[2][4] = 3</code> thì sang hàng 3. Ô <code>N[3][4] = 4</code> đưa ta tới đích.</p>
 <pre><code><span class="kw">public</span> <span class="kw">List</span>&lt;Integer&gt; nextPath(<span class="kw">int</span> s, <span class="kw">int</span> t) {
     <span class="kw">if</span> (distance(s, t) == INF) <span class="kw">return</span> <span class="kw">List</span>.of();
@@ -112,19 +107,17 @@
 </div>
 <div id="intermediate"><h3>Cách thứ hai</h3>
 <p>Ở phép ghép vừa rồi, Floyd dùng đỉnh 3 để nối hai đoạn đường. Nếu ghi lại số 3, sau này ta sẽ biết phải dựng đoạn 1 → 3 trước, rồi nối với đoạn 3 → 4. Áp dụng cùng ý tưởng cho đoạn 1 → 3, ta tìm lại được điểm chia là đỉnh 2.</p>
-<p>Ta lập một <a href="https://cp-algorithms.com/graph/all-pair-shortest-path-floyd-warshall.html#retrieving-the-sequence-of-vertices-in-the-shortest-path" title="CP-Algorithms, phần khôi phục đường đi">ma trận đỉnh trung gian</a>, đặt tên là <code>mid</code> và ký hiệu là M trên hình. Mỗi ô <code>mid[i][j]</code> lưu đỉnh k tại lần cập nhật gần nhất làm giảm <code>D[i][j]</code>. Ban đầu các ô đều bằng −1. Trong nhánh cập nhật khoảng cách, ta ghi thêm một dòng.</p>
-<pre class="formula"><code>mid[i][j] = k;</code></pre>
-<details class="implementation"><summary>Khởi tạo và cập nhật M trong Java</summary>
+<p>Ta lập một ma trận đỉnh trung gian, đặt tên là <code>mid</code> và ký hiệu là M trên hình. Mỗi ô <code>mid[i][j]</code> lưu đỉnh k tại lần cập nhật gần nhất làm giảm <code>D[i][j]</code>. Ban đầu các ô đều bằng −1.</p>
 <pre><code><span class="kw">int</span>[][] mid = <span class="kw">new</span> <span class="kw">int</span>[n + 1][n + 1];
 <span class="kw">for</span> (<span class="kw">int</span> i = 1; i &lt;= n; i++) {
     <span class="kw">Arrays</span>.fill(mid[i], -1);
 }</code></pre>
+<p>Khi đường qua k ngắn hơn, ta ghi k vào ô tương ứng.</p>
 <pre><code><span class="kw">long</span> via = d[i][k] + d[k][j];
 <span class="kw">if</span> (via &lt; d[i][j]) {
     d[i][j] = via;
     mid[i][j] = k;
 }</code></pre>
-</details>
 <p>Hàm đệ quy dựng đoạn trái trước, đoạn phải sau. Khi i và j khác nhau, có đường đi và <code>mid[i][j] == -1</code>, đoạn còn lại là một cạnh. Chỉ cần thêm j vào danh sách vì i đã có ở cuối đường đang dựng. Nhờ vậy khi ghép 1 → 2 với 2 → 3, đỉnh 2 xuất hiện đúng một lần.</p>
 <pre><code><span class="kw">public</span> <span class="kw">List</span>&lt;Integer&gt; midPath(<span class="kw">int</span> s, <span class="kw">int</span> t) {
     <span class="kw">if</span> (distance(s, t) == INF) <span class="kw">return</span> <span class="kw">List</span>.of();
@@ -182,7 +175,125 @@
 <tbody><tr><th scope="row">Ô (1, 4)</th><td>2, đỉnh ngay sau 1</td><td>3, đỉnh chia đường</td></tr>
 <tr><th scope="row">Bước đọc tiếp</th><td>Tra N[2][4] để đi tiếp từ 2.</td><td>Dựng đoạn (1, 3), rồi đoạn (3, 4).</td></tr></tbody></table>
 <p>Với V đỉnh, mỗi cách dùng thêm một ma trận O(V²). Phép gán thêm nằm trong nhánh cập nhật khoảng cách, nên thời gian chạy Floyd vẫn là O(V³). Nếu có hai đường ngắn bằng nhau, điều kiện <code>via &lt; d[i][j]</code> giữ đường đã chọn trước đó.</p>
-<p id="code"><a href="FloydWarshallPaths.java" download>Tải FloydWarshallPaths.java</a></p>
+</section>
+<section id="code"><h2>5. Chương trình Java</h2>
+<p>Lưu đoạn mã sau vào tệp <code>FloydWarshallPaths.java</code>. Chương trình dùng cả hai cách để tìm lại đường đi trên đồ thị ở đầu bài.</p>
+<pre><code id="java-source">import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public final class FloydWarshallPaths {
+    private static final long INF = Long.MAX_VALUE / 2;
+    private final int n;
+    private final long[][] d;
+    private final int[][] next, mid;
+
+    public FloydWarshallPaths(int n, int[][] edges) {
+        this.n = n;
+        d = new long[n + 1][n + 1];
+        next = new int[n + 1][n + 1];
+        mid = new int[n + 1][n + 1];
+        for (int i = 1; i &lt;= n; i++) {
+            Arrays.fill(d[i], INF);
+            Arrays.fill(next[i], -1);
+            Arrays.fill(mid[i], -1);
+            d[i][i] = 0;
+            next[i][i] = i;
+        }
+        for (int[] edge : edges) {
+            int u = edge[0], v = edge[1], w = edge[2];
+            if (w &lt; d[u][v]) {
+                d[u][v] = w;
+                next[u][v] = v;
+            }
+        }
+        build();
+    }
+
+    private void build() {
+        for (int k = 1; k &lt;= n; k++) {
+            for (int i = 1; i &lt;= n; i++) {
+                if (d[i][k] == INF) continue;
+                for (int j = 1; j &lt;= n; j++) {
+                    if (d[k][j] == INF) continue;
+                    long via = d[i][k] + d[k][j];
+                    if (via &lt; d[i][j]) {
+                        // Chặn tràn số khi một chu trình âm làm chi phí giảm liên tục.
+                        d[i][j] = Math.max(-INF, via);
+                        next[i][j] = next[i][k];
+                        mid[i][j] = k;
+                    }
+                }
+            }
+        }
+    }
+
+    public long distance(int s, int t) {
+        for (int k = 1; k &lt;= n; k++) {
+            if (d[s][k] != INF &amp;&amp; d[k][k] &lt; 0 &amp;&amp; d[k][t] != INF) {
+                throw new IllegalStateException("Cặp đỉnh đi qua được chu trình âm.");
+            }
+        }
+        return d[s][t];
+    }
+
+    public List&lt;Integer&gt; nextPath(int s, int t) {
+        if (distance(s, t) == INF) return List.of();
+        List&lt;Integer&gt; path = new ArrayList&lt;&gt;();
+        path.add(s);
+        while (s != t) {
+            s = next[s][t];
+            path.add(s);
+        }
+        return path;
+    }
+
+    public List&lt;Integer&gt; midPath(int s, int t) {
+        if (distance(s, t) == INF) return List.of();
+        List&lt;Integer&gt; path = new ArrayList&lt;&gt;();
+        path.add(s);
+        appendSegment(s, t, path);
+        return path;
+    }
+
+    private void appendSegment(int i, int j, List&lt;Integer&gt; path) {
+        if (i == j) return;
+        int k = mid[i][j];
+        if (k == -1) {
+            path.add(j);
+            return;
+        }
+        appendSegment(i, k, path);
+        appendSegment(k, j, path);
+    }
+
+    public static void main(String[] args) {
+        int[][] edges = {
+            {1, 2, 4}, {1, 3, 15}, {1, 4, 20},
+            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}
+        };
+        int n = 4;
+        if (args.length != 0 &amp;&amp; args.length != 2) {
+            throw new IllegalArgumentException("Dùng hai đối số: nguồn đích.");
+        }
+        int s = args.length == 0 ? 1 : Integer.parseInt(args[0]);
+        int t = args.length == 0 ? 4 : Integer.parseInt(args[1]);
+        if (s &lt; 1 || s &gt; n || t &lt; 1 || t &gt; n) {
+            throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
+        }
+        FloydWarshallPaths f = new FloydWarshallPaths(n, edges);
+        long length = f.distance(s, t);
+        if (length == INF) {
+            System.out.printf("Không có đường từ %d tới %d.%n", s, t);
+            return;
+        }
+        System.out.printf("D[%d][%d] = %d%n", s, t, length);
+        System.out.println("N = " + f.nextPath(s, t));
+        System.out.println("M = " + f.midPath(s, t));
+    }
+}
+</code></pre>
+<p>Biên dịch và chạy với đỉnh nguồn 1, đỉnh đích 4.</p>
 <pre><code>javac -encoding UTF-8 FloydWarshallPaths.java
 java FloydWarshallPaths 1 4</code></pre>
 </section>
