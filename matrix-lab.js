@@ -116,15 +116,6 @@
  const matrixClick=e=>{const b=e.target.closest('[data-cell]');if(!b||mode!=='trace')return;const [k,u,v]=b.dataset.cell.split(',');query(num(u),num(v),['P','N','M','H'].includes(k)?k:method);};$('mlMatrices').onclick=matrixClick;$('mlExtraMatrices').onclick=matrixClick;
  $('mlNextTie').onclick=()=>{stop();const next=frames.findIndex((f,i)=>i>buildPos&&f.event?.tied);if(next>=0)setPosition(next);else{const first=frames.findIndex(f=>f.event?.tied);if(first>=0)setPosition(first);}};
  $('mlList').onclick=e=>{const b=e.target.closest('[data-route]');if(!b)return;stop();selected=num(b.dataset.route);tracePos=max();render();};
- const guided=[
- ['guideImprove','build','P',40],['guideTie','build','H',76],
- ['guideP','trace','P',1],['guideN','trace','N',1],['guideM','trace','M',1],
- ['guideH','trace','H',1],['guideT','trace','T',1]
- ];
- for(const [id,stage,k,step] of guided){
-  const a=$(id);
-  if(a)a.onclick=()=>{stop();dataset='tie';model=E.build(n,E.DATA.tie.edges);mode=stage;method=k;s=0;t=5;showAll=true;filter=true;changeFilter();buildPos=0;recalc(false);if(stage==='build'){const ix=frames.findIndex(f=>f.step===step);buildPos=ix<0?0:ix;}else tracePos=Math.min(step,result.frames.length-1);render();};
- }
  changeFilter();recalc(true);render();
  return {getState:()=>({dataset,mode,method,s,t,buildPos,tracePos,showAll,filter,selected,result,model}),render};
 })(document,MatrixLabEngine);}catch(e){document.getElementById('mlError').hidden=false;document.getElementById('mlError').textContent='Không thể khởi tạo mô phỏng: '+e.message;console.error(e);}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();})();

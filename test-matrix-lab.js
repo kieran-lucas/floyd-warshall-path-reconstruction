@@ -40,7 +40,7 @@ const tie=E.build(6,E.DATA.tie.edges);
 assert.equal(tie.frames.length,217);assert.equal(tie.frames.at(-1).ties,7);assert.equal(E.path(tie,0,5,'H').paths.length,8);
 const neg=E.build(4,[[0,1,1],[1,2,-3],[2,1,1],[0,3,7]]);
 assert.equal(E.path(neg,0,2,'H').status,'negative-cycle');assert.equal(E.path(neg,0,3,'T').distance,7);
-const html=fs.readFileSync(__dirname+'/index.html','utf8');
+const html=fs.readFileSync(__dirname+'/laboratory.html','utf8');
 const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
 assert.equal(new Set(ids).size,ids.length);
 const staticTables=[...html.matchAll(/<table class="mlMatrix"[\s\S]*?<\/table>/g)];
