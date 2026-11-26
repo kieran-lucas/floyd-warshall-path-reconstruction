@@ -403,13 +403,31 @@ M = [1, 2, 3, 4]</code></pre>
 <g class="compare-leaf"><rect x="277" y="67" width="96" height="37" rx="4"/><rect x="7" y="129" width="96" height="37" rx="4"/><rect x="125" y="129" width="96" height="37" rx="4"/><text x="325" y="79">(3, 4)</text><text class="compare-sub" x="325" y="93">cạnh gốc</text><text x="55" y="141">(1, 2)</text><text class="compare-sub" x="55" y="155">cạnh gốc</text><text x="173" y="141">(2, 3)</text><text class="compare-sub" x="173" y="155">cạnh gốc</text></g></svg>
 <p>Đọc M, dựng đoạn trái trước rồi dựng đoạn phải.</p></figure>
 <div class="compare-result">Cùng một đường đi: <strong>1 → 2 → 3 → 4</strong> · Tổng trọng số: 9</div></div>
-<p>Với V đỉnh, mỗi cách dùng thêm một ma trận O(V²). Phép gán thêm nằm trong nhánh cập nhật khoảng cách, nên thời gian chạy Floyd vẫn là O(V³). Khi đường đi có L cạnh, việc dựng đường cần O(L + 1) thời gian ở cả hai cách: N dùng vòng lặp, M dùng đệ quy. Phần kiểm tra chu trình âm trong hàm <code>distance</code> của hai chương trình trên mất thêm O(V) mỗi truy vấn. Nếu có nhiều đường cùng ngắn nhất, điều kiện <code>via &lt; d[i][j]</code> giữ một đường đã chọn trước đó.</p>
+<p>Hai cách cùng khôi phục một đường đi ngắn nhất, nhưng khác nhau ở thông tin cần đọc và cách tổ chức các bước truy vết. Khi có nhiều đường đồng hạng, điều kiện <code>via &lt; d[i][j]</code> giữ lựa chọn đã có trước đó.</p>
 </section>
 
 <section id="trade-offs"><h2>5. Ưu và nhược điểm của hai phương pháp</h2>
-<p><strong>Next-Hop Matrix.</strong> Ưu điểm là truy vết trực tiếp từ nguồn đến đích bằng một vòng lặp. Mỗi lần tra ma trận N cho biết ngay đỉnh tiếp theo, nên có thể in đường đi theo đúng thứ tự và chỉ cần O(1) bộ nhớ phụ ngoài danh sách kết quả. Nhược điểm là khi muốn tìm điểm chia của đường đi như trong quá trình quy hoạch động, ma trận N không lưu trực tiếp thông tin này.</p>
-<p><strong>Intermediate Matrix.</strong> Ưu điểm là cách lưu vết bám sát phép ghép đường của Floyd–Warshall: khi tìm được đường ngắn hơn qua k, chỉ cần ghi k vào M[i][j]. Ma trận M giúp thấy rõ cách đường đi được chia thành hai đoạn. Nhược điểm là muốn lấy bước đi đầu tiên, có thể phải phân chia qua nhiều lời gọi đệ quy; ngăn xếp đệ quy cần thêm tới O(L) bộ nhớ với đường đi có L cạnh.</p>
-<p>Nếu mục đích chủ yếu là in đường đi hoặc xác định bước tiếp theo, Next-Hop thuận tiện hơn. Intermediate phù hợp khi muốn làm rõ quá trình phân chia và ghép đường của Floyd–Warshall. Cả hai giữ nguyên độ phức tạp tiền xử lý O(V³) và bộ nhớ ma trận O(V²), đồng thời chỉ trả về một đường ngắn nhất được chọn.</p>
+<p>Hai phương pháp cùng mở rộng Floyd–Warshall bằng một ma trận lưu vết. Sự khác biệt chủ yếu nằm ở cách sử dụng ma trận sau khi đã tính xong khoảng cách. Gọi V là số đỉnh của đồ thị và L là số cạnh trên đường đi ngắn nhất được chọn.</p>
+
+<h3>5.1. So sánh chi phí</h3>
+<table class="compare" aria-label="So sánh chi phí của Next-Hop và Intermediate Matrix">
+<thead><tr><th scope="col">Tiêu chí</th><th scope="col">Next-Hop (N)</th><th scope="col">Intermediate (M)</th></tr></thead>
+<tbody>
+<tr><th scope="row">Thời gian tiền xử lý</th><td>O(V³)</td><td>O(V³)</td></tr>
+<tr><th scope="row">Bộ nhớ ma trận bổ sung</th><td>Θ(V²)</td><td>Θ(V²)</td></tr>
+<tr><th scope="row">Xác định bước đi đầu tiên</th><td>Θ(1), đọc N[s][t]</td><td>O(L), tìm cạnh đầu tiên bằng đệ quy</td></tr>
+<tr><th scope="row">Truy vết toàn bộ đường đi</th><td>Θ(L + 1)</td><td>Θ(L + 1)</td></tr>
+<tr><th scope="row">Bộ nhớ phụ khi truy vết</th><td>Θ(1)</td><td>O(L), do ngăn xếp đệ quy</td></tr>
+</tbody></table>
+<p>Chi phí trên xét cặp nguồn–đích đã được xác định có đường đi ngắn nhất hữu hạn, không tính bộ nhớ dành cho danh sách kết quả (Θ(L + 1) ở cả hai cách). Trong hai chương trình Java ở trên, hàm <code>distance</code> còn duyệt V đỉnh để kiểm tra chu trình âm, nên một truy vấn đầy đủ mất O(V + L + 1) thời gian.</p>
+
+<h3>5.2. Sự khác biệt khi truy vết</h3>
+<p><strong>Next-Hop Matrix.</strong> Với mỗi cạnh của đường đi, thuật toán chỉ cần đọc một ô N và chuyển sang đỉnh tiếp theo. Một đường có L cạnh tương ứng với L lần tra ma trận. Cách này thuận tiện khi cần in các đỉnh theo thứ tự, xác định ngay bước đi tiếp theo hoặc thực hiện nhiều truy vấn. Đổi lại, N chỉ lưu bước đầu tiên của đường đã chọn; nó không trực tiếp biểu diễn các điểm chia được tạo ra trong quá trình Floyd–Warshall.</p>
+<p><strong>Intermediate Matrix.</strong> M ghi lại chính đỉnh k dùng để ghép hai đoạn đường, nên cấu trúc lưu vết phản ánh trực tiếp phép truy hồi của Floyd–Warshall. Tuy nhiên, để dựng một đường có L ≥ 1 cạnh, hàm <code>appendSegment</code> thực hiện L − 1 lần phân chia và L lời gọi ứng với các cạnh trực tiếp, tổng cộng 2L − 1 lời gọi. Độ sâu đệ quy phụ thuộc vào cách các đoạn được chia; trong trường hợp xấu nhất, nó có thể tăng tuyến tính theo L. Vì vậy, dù độ phức tạp thời gian cùng bậc với Next-Hop, Intermediate có thêm chi phí gọi hàm và sử dụng ngăn xếp.</p>
+<p>Ví dụ, với đường 1 → 2 → 3 → 4 ở phần 4, Next-Hop đọc ba ô N, còn Intermediate đọc năm ô M: hai ô chứa điểm chia và ba ô ứng với cạnh trực tiếp. Đây là số bước của cơ chế truy vết, không phải kết quả đo thời gian chạy.</p>
+
+<h3>5.3. Nên sử dụng phương pháp nào?</h3>
+<p>Nếu mục tiêu là khôi phục đường đi để sử dụng trong chương trình, Next-Hop thường là lựa chọn thuận tiện hơn nhờ truy vết tuần tự và không cần đệ quy. Intermediate có giá trị khi muốn biểu diễn đường đi dưới dạng các bài toán con, đặc biệt trong việc minh họa tư tưởng quy hoạch động. Cả hai đều giữ nguyên bậc độ phức tạp của Floyd–Warshall và chỉ lưu một đường đi được chọn khi có nhiều đường ngắn nhất đồng hạng.</p>
 </section>
 
 </main></body></html>
