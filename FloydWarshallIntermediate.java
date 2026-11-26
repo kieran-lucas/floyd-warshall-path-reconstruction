@@ -74,14 +74,15 @@ public final class FloydWarshallIntermediate {
     public static void main(String[] args) {
         int[][] edges = {
             {1, 2, 4}, {1, 3, 15}, {1, 4, 20},
-            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}
+            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}, {3, 6, 14},
+            {4, 5, 2}, {4, 6, 10}, {5, 6, 3}
         };
-        int n = 4;
+        int n = 6;
         if (args.length != 0 && args.length != 2) {
             throw new IllegalArgumentException("Dùng hai đối số: nguồn đích.");
         }
         int s = args.length == 0 ? 1 : Integer.parseInt(args[0]);
-        int t = args.length == 0 ? 4 : Integer.parseInt(args[1]);
+        int t = args.length == 0 ? 6 : Integer.parseInt(args[1]);
         if (s < 1 || s > n || t < 1 || t > n) {
             throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
         }

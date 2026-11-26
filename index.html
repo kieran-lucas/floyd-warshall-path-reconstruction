@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Truy vết đường đi với Floyd–Warshall</title>
-<meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ bốn đỉnh và mã Java.">
-<link rel="stylesheet" href="lesson.css?v=split1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
+<meta name="description" content="Truy vết Floyd–Warshall bằng ma trận bước kế tiếp hoặc ma trận đỉnh trung gian, với ví dụ sáu đỉnh và mã Java.">
+<link rel="stylesheet" href="lesson.css?v=six1"><script defer src="matrix-engine.js?v=5"></script><script defer src="lesson.js?v=reader2"></script>
 </head>
 <body><main>
 <header><h1>Truy vết đường đi với Floyd–Warshall</h1></header>
@@ -13,24 +13,30 @@
 <p>Khi cần tìm đường đi giữa hai đỉnh bất kỳ, Floyd–Warshall cho phép tính trước khoảng cách ngắn nhất giữa mọi cặp đỉnh trong một lần chạy. Phiên bản cơ bản của thuật toán trả về ma trận khoảng cách; nếu muốn in ra dãy đỉnh của đường đi, ta cần khôi phục thông tin ấy. Ta sẽ tìm hiểu hai cách bổ sung ma trận lưu vết ngay trong quá trình tính Floyd.</p>
 </section>
 <section id="floyd"><h2>2. Ma trận khoảng cách của Floyd–Warshall</h2>
-<p>Gọi D là ma trận khoảng cách, với hàng là nguồn và cột là đích. Ban đầu mỗi ô mang trọng số của cạnh trực tiếp. Đường chéo bằng 0, còn ∞ nghĩa là hai đỉnh chưa có cạnh nối theo chiều đó.</p>
-<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 370 202">
-            <title id="graph-title-initial">Đồ thị có hướng. Các cạnh 1 → 2, 1 → 3, 1 → 4, 2 → 3, 2 → 4 và 3 → 4 có trọng số lần lượt là 4, 15, 20, 3, 10 và 2.</title>
-            <defs>
+<p>Xét đồ thị có hướng gồm 6 đỉnh dưới đây. Gọi D là ma trận khoảng cách 6 × 6, với hàng là nguồn và cột là đích. Ban đầu mỗi ô mang trọng số của cạnh trực tiếp. Đường chéo bằng 0, còn ∞ nghĩa là hai đỉnh chưa có cạnh nối theo chiều đó.</p>
+<div class="views initial"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D ban đầu</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1" class="read">4</td><td data-cell="0,2" class="target">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2" class="read">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table></div><figure class="graph-panel" style="--arrow:url(#arrow-initial);--arrow-on:url(#arrow-on-initial)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="img" aria-labelledby="graph-title-initial" viewBox="0 0 480 238">
+<title id="graph-title-initial">Đồ thị có hướng gồm 6 đỉnh. Các cạnh và trọng số: 1 → 2 (4), 1 → 3 (15), 1 → 4 (20), 2 → 3 (3), 2 → 4 (10), 3 → 4 (2), 3 → 6 (14), 4 → 5 (2), 4 → 6 (10), 5 → 6 (3).</title>
+<defs>
               <marker id="arrow-initial" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
               <marker id="arrow-on-initial" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
             </defs>
-            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">20</text></g>
-            <g class="active" data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">4</text></g>
-            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">10</text></g>
-            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">15</text></g>
-            <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
-            <g class="active" data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">3</text></g>
-            <g data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
-            <g data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
-            <g data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
-            <g data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
-          </svg></figure></div>
+<g data-edge="0,3"><path d="M44 101 Q135 -65 226 101"/><text x="135" y="17">20</text></g>
+<g data-edge="2,5"><path d="M151 191 Q300 256 435 130"/><text x="300" y="207">14</text></g>
+<g class="active" data-edge="0,1"><path d="M46.5 105.6 L116.8 65.4"/><text x="82.5" y="75">4</text></g>
+<g data-edge="0,2"><path d="M46.2 125 L117.1 168.9"/><text x="82.5" y="137.5">15</text></g>
+<g class="active" data-edge="1,2"><path d="M135 74 L135 159"/><text x="148" y="117.5">3</text></g>
+<g data-edge="1,3"><path d="M151.5 64.4 L221.8 104.6"/><text x="187.5" y="75">10</text></g>
+<g data-edge="2,3"><path d="M151.2 170 L222.1 126.1"/><text x="187.5" y="137.5">2</text></g>
+<g data-edge="3,4"><path d="M256.5 105.6 L326.8 65.4"/><text x="292.5" y="75">2</text></g>
+<g data-edge="3,5"><path d="M259 115 L429 115"/><text x="345" y="105">10</text></g>
+<g data-edge="4,5"><path d="M361.5 64.4 L431.8 104.6"/><text x="397.5" y="75">3</text></g>
+<g data-node="0" transform="translate(30 115)"><circle r="17"/><text>1</text></g>
+<g data-node="1" transform="translate(135 55)"><circle r="17"/><text>2</text></g>
+<g data-node="2" transform="translate(135 180)"><circle r="17"/><text>3</text></g>
+<g data-node="3" transform="translate(240 115)"><circle r="17"/><text>4</text></g>
+<g data-node="4" transform="translate(345 55)"><circle r="17"/><text>5</text></g>
+<g data-node="5" transform="translate(450 115)"><circle r="17"/><text>6</text></g>
+</svg></figure></div>
 
 <p>Cạnh 1 → 3 có trọng số 15. Đi qua 2 chỉ tốn 4 + 3 = 7, nên Floyd đổi <code>D[1][3]</code> từ 15 thành 7. Cũng ở lượt này, đường 1 → 2 → 4 tốn 4 + 10 = 14, ngắn hơn cạnh trực tiếp có trọng số 20. Sang lượt xét đỉnh 3, ghép đường vừa tìm được từ 1 đến 3 với cạnh 3 → 4 chỉ tốn 7 + 2 = 9. Ô <code>D[1][4]</code> giảm từ 14 xuống 9.</p>
 <p>Sau lượt xét k, <code>D[i][j]</code> là khoảng cách ngắn nhất từ i đến j khi chỉ cho phép các đỉnh 1, 2, …, k làm trung gian. Hai đầu mút i, j không bị giới hạn trong tập này. Khi xét thêm k, ta so sánh đường đang có với đường ghép từ i đến k rồi từ k đến j. Hai đoạn này có thể đã đi qua các đỉnh trung gian được xét ở những lượt trước.</p>
@@ -74,28 +80,34 @@
     }
     <span class="kw">return</span> path;
 }</code></pre>
-<p class="demo-intro">Trong hình dưới đây, chọn đỉnh 1 rồi đỉnh 4 để xem N được đọc theo cột 4. Chuyển sang giai đoạn xây dựng ma trận để theo dõi N thay đổi khi Floyd tìm được đường ngắn hơn.</p>
+<p class="demo-intro">Trong hình dưới đây, chọn hai đỉnh bất kỳ để truy vết. Chẳng hạn, chọn đỉnh 1 rồi đỉnh 6 để xem N được đọc theo cột 6. Chuyển sang giai đoạn xây dựng ma trận để theo dõi N thay đổi khi Floyd tìm được đường ngắn hơn.</p>
 <div id="simulation"><div class="demo" data-method="N" id="demo-n">
   <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
     <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ hiện bước giảm khoảng cách</label></div>
-  <div class="views"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D · Khoảng cách</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1">4</td><td data-cell="0,2">15</td><td data-cell="0,3">20</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2">3</td><td data-cell="1,3">10</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td></tr></tbody></table><table class="matrix" data-matrix="N"><caption>N · Bước kế tiếp</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">1</td><td data-cell="0,1">2</td><td data-cell="0,2">3</td><td data-cell="0,3">4</td></tr><tr><th scope="row">2</th><td data-cell="1,0">−1</td><td data-cell="1,1">2</td><td data-cell="1,2">3</td><td data-cell="1,3">4</td></tr><tr><th scope="row">3</th><td data-cell="2,0">−1</td><td data-cell="2,1">−1</td><td data-cell="2,2">3</td><td data-cell="2,3">4</td></tr><tr><th scope="row">4</th><td data-cell="3,0">−1</td><td data-cell="3,1">−1</td><td data-cell="3,2">−1</td><td data-cell="3,3">4</td></tr></tbody></table>
-  </div><div class="drawing"><figure class="graph-panel" style="--arrow:url(#arrow-N);--arrow-on:url(#arrow-on-N)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="group" aria-labelledby="graph-title-N" viewBox="0 0 370 202">
-            <title id="graph-title-N">Đồ thị có hướng. Các cạnh 1 → 2, 1 → 3, 1 → 4, 2 → 3, 2 → 4 và 3 → 4 có trọng số lần lượt là 4, 15, 20, 3, 10 và 2.</title>
-            <defs>
+  <div class="views"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D · Khoảng cách</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1">4</td><td data-cell="0,2">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table><table class="matrix" data-matrix="N"><caption>N · Bước kế tiếp</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">1</td><td data-cell="0,1">2</td><td data-cell="0,2">3</td><td data-cell="0,3">4</td><td data-cell="0,4">−1</td><td data-cell="0,5">−1</td></tr><tr><th scope="row">2</th><td data-cell="1,0">−1</td><td data-cell="1,1">2</td><td data-cell="1,2">3</td><td data-cell="1,3">4</td><td data-cell="1,4">−1</td><td data-cell="1,5">−1</td></tr><tr><th scope="row">3</th><td data-cell="2,0">−1</td><td data-cell="2,1">−1</td><td data-cell="2,2">3</td><td data-cell="2,3">4</td><td data-cell="2,4">−1</td><td data-cell="2,5">6</td></tr><tr><th scope="row">4</th><td data-cell="3,0">−1</td><td data-cell="3,1">−1</td><td data-cell="3,2">−1</td><td data-cell="3,3">4</td><td data-cell="3,4">5</td><td data-cell="3,5">6</td></tr><tr><th scope="row">5</th><td data-cell="4,0">−1</td><td data-cell="4,1">−1</td><td data-cell="4,2">−1</td><td data-cell="4,3">−1</td><td data-cell="4,4">5</td><td data-cell="4,5">6</td></tr><tr><th scope="row">6</th><td data-cell="5,0">−1</td><td data-cell="5,1">−1</td><td data-cell="5,2">−1</td><td data-cell="5,3">−1</td><td data-cell="5,4">−1</td><td data-cell="5,5">6</td></tr></tbody></table>
+  </div><div class="drawing"><figure class="graph-panel" style="--arrow:url(#arrow-N);--arrow-on:url(#arrow-on-N)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="group" aria-labelledby="graph-title-N" viewBox="0 0 480 238">
+<title id="graph-title-N">Đồ thị có hướng gồm 6 đỉnh. Các cạnh và trọng số: 1 → 2 (4), 1 → 3 (15), 1 → 4 (20), 2 → 3 (3), 2 → 4 (10), 3 → 4 (2), 3 → 6 (14), 4 → 5 (2), 4 → 6 (10), 5 → 6 (3).</title>
+<defs>
               <marker id="arrow-N" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
               <marker id="arrow-on-N" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
             </defs>
-            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">20</text></g>
-            <g data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">4</text></g>
-            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">10</text></g>
-            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">15</text></g>
-            <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
-            <g data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">3</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
-          </svg></figure>
+<g data-edge="0,3"><path d="M44 101 Q135 -65 226 101"/><text x="135" y="17">20</text></g>
+<g data-edge="2,5"><path d="M151 191 Q300 256 435 130"/><text x="300" y="207">14</text></g>
+<g data-edge="0,1"><path d="M46.5 105.6 L116.8 65.4"/><text x="82.5" y="75">4</text></g>
+<g data-edge="0,2"><path d="M46.2 125 L117.1 168.9"/><text x="82.5" y="137.5">15</text></g>
+<g data-edge="1,2"><path d="M135 74 L135 159"/><text x="148" y="117.5">3</text></g>
+<g data-edge="1,3"><path d="M151.5 64.4 L221.8 104.6"/><text x="187.5" y="75">10</text></g>
+<g data-edge="2,3"><path d="M151.2 170 L222.1 126.1"/><text x="187.5" y="137.5">2</text></g>
+<g data-edge="3,4"><path d="M256.5 105.6 L326.8 65.4"/><text x="292.5" y="75">2</text></g>
+<g data-edge="3,5"><path d="M259 115 L429 115"/><text x="345" y="105">10</text></g>
+<g data-edge="4,5"><path d="M361.5 64.4 L431.8 104.6"/><text x="397.5" y="75">3</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(30 115)"><circle r="17"/><text>1</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(135 55)"><circle r="17"/><text>2</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(135 180)"><circle r="17"/><text>3</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(240 115)"><circle r="17"/><text>4</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 5" data-node="4" transform="translate(345 55)"><circle r="17"/><text>5</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 6" data-node="5" transform="translate(450 115)"><circle r="17"/><text>6</text></g>
+</svg></figure>
     <p class="pick" data-role="pick">Chọn đỉnh nguồn, rồi chọn đỉnh đích.</p>
     <p class="route" data-role="route"></p>
   </div></div>
@@ -178,14 +190,15 @@ public final class FloydWarshallNextHop {
     public static void main(String[] args) {
         int[][] edges = {
             {1, 2, 4}, {1, 3, 15}, {1, 4, 20},
-            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}
+            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}, {3, 6, 14},
+            {4, 5, 2}, {4, 6, 10}, {5, 6, 3}
         };
-        int n = 4;
+        int n = 6;
         if (args.length != 0 &amp;&amp; args.length != 2) {
             throw new IllegalArgumentException("Dùng hai đối số: nguồn đích.");
         }
         int s = args.length == 0 ? 1 : Integer.parseInt(args[0]);
-        int t = args.length == 0 ? 4 : Integer.parseInt(args[1]);
+        int t = args.length == 0 ? 6 : Integer.parseInt(args[1]);
         if (s &lt; 1 || s &gt; n || t &lt; 1 || t &gt; n) {
             throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
         }
@@ -200,12 +213,12 @@ public final class FloydWarshallNextHop {
     }
 }
 </code></pre>
-<p>Biên dịch và chạy với nguồn 1, đích 4:</p>
+<p>Biên dịch và chạy với nguồn 1, đích 6:</p>
 <pre><code>javac -encoding UTF-8 FloydWarshallNextHop.java
-java FloydWarshallNextHop 1 4</code></pre>
+java FloydWarshallNextHop 1 6</code></pre>
 <p>Kết quả:</p>
-<pre><code>D[1][4] = 9
-N = [1, 2, 3, 4]</code></pre>
+<pre><code>D[1][6] = 14
+N = [1, 2, 3, 4, 5, 6]</code></pre>
 </div>
 </div>
 <div id="intermediate"><h3>Cách 2: Ma trận đỉnh trung gian (Intermediate Matrix)</h3>
@@ -240,29 +253,35 @@ N = [1, 2, 3, 4]</code></pre>
     appendSegment(i, k, path);
     appendSegment(k, j, path);
 }</code></pre>
-<p class="demo-intro">Chọn lại hai đỉnh 1 và 4. Lần này, theo dõi các ô M được đọc và danh sách lời gọi đệ quy để thấy cách đường đi được chia nhỏ rồi ghép lại.</p>
+<p class="demo-intro">Chọn lại hai đỉnh 1 và 6. Lần này, theo dõi các ô M được đọc và danh sách lời gọi đệ quy để thấy cách đường đi được chia nhỏ rồi ghép lại.</p>
 <div class="demo" data-method="M" id="demo-m">
   <div class="settings"><label>Giai đoạn <select data-role="phase"><option value="build">Xây dựng ma trận</option><option value="trace">Truy vết đường đi</option></select></label>
     <label data-role="filter-label"><input type="checkbox" data-role="filter" checked> Chỉ hiện bước giảm khoảng cách</label></div>
-  <div class="views"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D · Khoảng cách</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1">4</td><td data-cell="0,2">15</td><td data-cell="0,3">20</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2">3</td><td data-cell="1,3">10</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td></tr></tbody></table><table class="matrix" data-matrix="M"><caption>M · Đỉnh trung gian</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">−1</td><td data-cell="0,1">−1</td><td data-cell="0,2">−1</td><td data-cell="0,3">−1</td></tr><tr><th scope="row">2</th><td data-cell="1,0">−1</td><td data-cell="1,1">−1</td><td data-cell="1,2">−1</td><td data-cell="1,3">−1</td></tr><tr><th scope="row">3</th><td data-cell="2,0">−1</td><td data-cell="2,1">−1</td><td data-cell="2,2">−1</td><td data-cell="2,3">−1</td></tr><tr><th scope="row">4</th><td data-cell="3,0">−1</td><td data-cell="3,1">−1</td><td data-cell="3,2">−1</td><td data-cell="3,3">−1</td></tr></tbody></table>
+  <div class="views"><div class="matrices"><table class="matrix" data-matrix="D"><caption>D · Khoảng cách</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">0</td><td data-cell="0,1">4</td><td data-cell="0,2">15</td><td data-cell="0,3">20</td><td data-cell="0,4">∞</td><td data-cell="0,5">∞</td></tr><tr><th scope="row">2</th><td data-cell="1,0">∞</td><td data-cell="1,1">0</td><td data-cell="1,2">3</td><td data-cell="1,3">10</td><td data-cell="1,4">∞</td><td data-cell="1,5">∞</td></tr><tr><th scope="row">3</th><td data-cell="2,0">∞</td><td data-cell="2,1">∞</td><td data-cell="2,2">0</td><td data-cell="2,3">2</td><td data-cell="2,4">∞</td><td data-cell="2,5">14</td></tr><tr><th scope="row">4</th><td data-cell="3,0">∞</td><td data-cell="3,1">∞</td><td data-cell="3,2">∞</td><td data-cell="3,3">0</td><td data-cell="3,4">2</td><td data-cell="3,5">10</td></tr><tr><th scope="row">5</th><td data-cell="4,0">∞</td><td data-cell="4,1">∞</td><td data-cell="4,2">∞</td><td data-cell="4,3">∞</td><td data-cell="4,4">0</td><td data-cell="4,5">3</td></tr><tr><th scope="row">6</th><td data-cell="5,0">∞</td><td data-cell="5,1">∞</td><td data-cell="5,2">∞</td><td data-cell="5,3">∞</td><td data-cell="5,4">∞</td><td data-cell="5,5">0</td></tr></tbody></table><table class="matrix" data-matrix="M"><caption>M · Đỉnh trung gian</caption><thead><tr><td>i / j</td><th scope="col">1</th><th scope="col">2</th><th scope="col">3</th><th scope="col">4</th><th scope="col">5</th><th scope="col">6</th></tr></thead><tbody><tr><th scope="row">1</th><td data-cell="0,0">−1</td><td data-cell="0,1">−1</td><td data-cell="0,2">−1</td><td data-cell="0,3">−1</td><td data-cell="0,4">−1</td><td data-cell="0,5">−1</td></tr><tr><th scope="row">2</th><td data-cell="1,0">−1</td><td data-cell="1,1">−1</td><td data-cell="1,2">−1</td><td data-cell="1,3">−1</td><td data-cell="1,4">−1</td><td data-cell="1,5">−1</td></tr><tr><th scope="row">3</th><td data-cell="2,0">−1</td><td data-cell="2,1">−1</td><td data-cell="2,2">−1</td><td data-cell="2,3">−1</td><td data-cell="2,4">−1</td><td data-cell="2,5">−1</td></tr><tr><th scope="row">4</th><td data-cell="3,0">−1</td><td data-cell="3,1">−1</td><td data-cell="3,2">−1</td><td data-cell="3,3">−1</td><td data-cell="3,4">−1</td><td data-cell="3,5">−1</td></tr><tr><th scope="row">5</th><td data-cell="4,0">−1</td><td data-cell="4,1">−1</td><td data-cell="4,2">−1</td><td data-cell="4,3">−1</td><td data-cell="4,4">−1</td><td data-cell="4,5">−1</td></tr><tr><th scope="row">6</th><td data-cell="5,0">−1</td><td data-cell="5,1">−1</td><td data-cell="5,2">−1</td><td data-cell="5,3">−1</td><td data-cell="5,4">−1</td><td data-cell="5,5">−1</td></tr></tbody></table>
     <div data-role="calls-box" class="calls" hidden><h4>Lời gọi đệ quy</h4><ol data-role="calls"></ol></div>
-  </div><div class="drawing"><figure class="graph-panel" style="--arrow:url(#arrow-M);--arrow-on:url(#arrow-on-M)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="group" aria-labelledby="graph-title-M" viewBox="0 0 370 202">
-            <title id="graph-title-M">Đồ thị có hướng. Các cạnh 1 → 2, 1 → 3, 1 → 4, 2 → 3, 2 → 4 và 3 → 4 có trọng số lần lượt là 4, 15, 20, 3, 10 và 2.</title>
-            <defs>
+  </div><div class="drawing"><figure class="graph-panel" style="--arrow:url(#arrow-M);--arrow-on:url(#arrow-on-M)"><figcaption>Đồ thị có hướng</figcaption><svg class="route-graph" role="group" aria-labelledby="graph-title-M" viewBox="0 0 480 238">
+<title id="graph-title-M">Đồ thị có hướng gồm 6 đỉnh. Các cạnh và trọng số: 1 → 2 (4), 1 → 3 (15), 1 → 4 (20), 2 → 3 (3), 2 → 4 (10), 3 → 4 (2), 3 → 6 (14), 4 → 5 (2), 4 → 6 (10), 5 → 6 (3).</title>
+<defs>
               <marker id="arrow-M" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#8c9db0"/></marker>
               <marker id="arrow-on-M" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 8 4 0 8Z" fill="#174e86"/></marker>
             </defs>
-            <g data-edge="0,3"><path d="M53 90 Q184 -63 317 90"/><text x="185" y="17">20</text></g>
-            <g data-edge="0,1"><path d="M57 98 164 60"/><text x="103" y="76">4</text></g>
-            <g data-edge="1,3"><path d="M206 60 312 98"/><text x="263" y="76">10</text></g>
-            <g data-edge="0,2"><path d="M57 114 164 154"/><text x="103" y="139">15</text></g>
-            <g data-edge="2,3"><path d="M206 154 312 114"/><text x="263" y="139">2</text></g>
-            <g data-edge="1,2"><path d="M185 73V141"/><text x="185" y="106">3</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(38 106)"><circle r="18"/><text>1</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(185 53)"><circle r="18"/><text>2</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(185 162)"><circle r="18"/><text>3</text></g>
-            <g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(332 106)"><circle r="18"/><text>4</text></g>
-          </svg></figure>
+<g data-edge="0,3"><path d="M44 101 Q135 -65 226 101"/><text x="135" y="17">20</text></g>
+<g data-edge="2,5"><path d="M151 191 Q300 256 435 130"/><text x="300" y="207">14</text></g>
+<g data-edge="0,1"><path d="M46.5 105.6 L116.8 65.4"/><text x="82.5" y="75">4</text></g>
+<g data-edge="0,2"><path d="M46.2 125 L117.1 168.9"/><text x="82.5" y="137.5">15</text></g>
+<g data-edge="1,2"><path d="M135 74 L135 159"/><text x="148" y="117.5">3</text></g>
+<g data-edge="1,3"><path d="M151.5 64.4 L221.8 104.6"/><text x="187.5" y="75">10</text></g>
+<g data-edge="2,3"><path d="M151.2 170 L222.1 126.1"/><text x="187.5" y="137.5">2</text></g>
+<g data-edge="3,4"><path d="M256.5 105.6 L326.8 65.4"/><text x="292.5" y="75">2</text></g>
+<g data-edge="3,5"><path d="M259 115 L429 115"/><text x="345" y="105">10</text></g>
+<g data-edge="4,5"><path d="M361.5 64.4 L431.8 104.6"/><text x="397.5" y="75">3</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 1" data-node="0" transform="translate(30 115)"><circle r="17"/><text>1</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 2" data-node="1" transform="translate(135 55)"><circle r="17"/><text>2</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 3" data-node="2" transform="translate(135 180)"><circle r="17"/><text>3</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 4" data-node="3" transform="translate(240 115)"><circle r="17"/><text>4</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 5" data-node="4" transform="translate(345 55)"><circle r="17"/><text>5</text></g>
+<g role="button" tabindex="0" aria-label="Chọn đỉnh 6" data-node="5" transform="translate(450 115)"><circle r="17"/><text>6</text></g>
+</svg></figure>
     <p class="pick" data-role="pick">Chọn đỉnh nguồn, rồi chọn đỉnh đích.</p>
     <p class="route" data-role="route"></p>
   </div></div>
@@ -351,14 +370,15 @@ public final class FloydWarshallIntermediate {
     public static void main(String[] args) {
         int[][] edges = {
             {1, 2, 4}, {1, 3, 15}, {1, 4, 20},
-            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}
+            {2, 3, 3}, {2, 4, 10}, {3, 4, 2}, {3, 6, 14},
+            {4, 5, 2}, {4, 6, 10}, {5, 6, 3}
         };
-        int n = 4;
+        int n = 6;
         if (args.length != 0 &amp;&amp; args.length != 2) {
             throw new IllegalArgumentException("Dùng hai đối số: nguồn đích.");
         }
         int s = args.length == 0 ? 1 : Integer.parseInt(args[0]);
-        int t = args.length == 0 ? 4 : Integer.parseInt(args[1]);
+        int t = args.length == 0 ? 6 : Integer.parseInt(args[1]);
         if (s &lt; 1 || s &gt; n || t &lt; 1 || t &gt; n) {
             throw new IllegalArgumentException("Đỉnh phải thuộc khoảng 1.." + n);
         }
@@ -373,12 +393,12 @@ public final class FloydWarshallIntermediate {
     }
 }
 </code></pre>
-<p>Biên dịch và chạy với nguồn 1, đích 4:</p>
+<p>Biên dịch và chạy với nguồn 1, đích 6:</p>
 <pre><code>javac -encoding UTF-8 FloydWarshallIntermediate.java
-java FloydWarshallIntermediate 1 4</code></pre>
+java FloydWarshallIntermediate 1 6</code></pre>
 <p>Kết quả:</p>
-<pre><code>D[1][4] = 9
-M = [1, 2, 3, 4]</code></pre>
+<pre><code>D[1][6] = 14
+M = [1, 2, 3, 4, 5, 6]</code></pre>
 </div>
 </div>
 </section>

@@ -155,3 +155,8 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .full-source { margin: 20px 0 26px; }
 .full-source h4 { font: 600 15px/1.5 var(--sans); margin: 0 0 8px; }
 .source-download { color: var(--blue); text-underline-offset: 2px; }
+
+/* Six-vertex example: preserve full matrices on narrow screens. */
+.route-graph { max-width: 480px; }
+.matrix { max-width: 420px; }
+@media(max-width: 700px) { .views { grid-template-columns: 1fr; } .demo .drawing { grid-row: 1; } .demo .matrices { grid-template-columns: 1fr; } .matrix { width: 100%; max-width: 420px; border-spacing: 3px; } .route-graph { max-height: none; } }

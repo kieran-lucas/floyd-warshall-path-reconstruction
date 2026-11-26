@@ -22,8 +22,8 @@ for (const [key, source, name, method] of [
   const end = html.indexOf(key === 'n' ? '<div id="intermediate">' : '<section id="comparison">');
   assert.ok(start >= 0 && listing.index > start && listing.index < end, 'Complete code belongs to its method.');
 }
-assert.doesNotMatch(javaN, /\\bmid\\b|midPath|appendSegment/);
-assert.doesNotMatch(javaM, /\\bnext\\b|nextPath/);
+assert.doesNotMatch(javaN, /\bmid\b|midPath|appendSegment/);
+assert.doesNotMatch(javaM, /\bnext\b|nextPath/);
 assert.doesNotMatch(html, /<section id="code">|FloydWarshallPaths\\.java|id="java-source"/);
 assert.doesNotMatch(html, /<details\b|role="tab(?:list|panel)?"/i);
 assert.doesNotMatch(html, /(?:href|src)\s*=\s*["'](?:https?:)?\/\//i);
@@ -34,7 +34,7 @@ const input = diagram => [...diagram.matchAll(/data-edge="(\d+),(\d+)"><path[^>]
 const edges = input(diagrams[0]);
 for (const drawing of diagrams.slice(1)) {
   assert.deepEqual(input(drawing), edges);
-  assert.equal((drawing.match(/role="button" tabindex="0"/g) || []).length, 4);
+  assert.equal((drawing.match(/role="button" tabindex="0"/g) || []).length, 6);
 }
 for (const java of [javaN, javaM]) {
   const javaEdges = [...java.matchAll(/\{(\d+), (\d+), (\d+)\}/g)].map(([,u,v,w]) => [+u - 1, +v - 1, +w]);
@@ -42,19 +42,19 @@ for (const java of [javaN, javaM]) {
 }
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
 assert.equal(new Set(ids).size, ids.length);
-const m = engine.build(4, edges);
+const m = engine.build(6, edges);
 const textValue = (v, key) => key === 'D' ? engine.fmt(v) : v < 0 ? '−1' : String(v + 1);
 const tables = [...html.matchAll(/<table class="matrix" data-matrix="([DMN])">([\s\S]*?)<\/table>/g)];
 assert.equal(tables.length, 5);
 for (const [, key, markup] of tables) {
   const cells = [...markup.matchAll(/<td data-cell="(\d+),(\d+)"[^>]*>([^<]+)<\/td>/g)];
-  assert.equal(cells.length, 16);
+  assert.equal(cells.length, 36);
   for (const [,i,j,value] of cells) assert.equal(value,textValue(m.frames[0].state[key][i][j],key));
 }
 for (const key of ['N', 'M']) {
   const full = buildFrames(m, key, false);
   const filtered = buildFrames(m, key, true);
-  assert.equal(full.length, 66); // Initialization, 64 comparisons and completion.
+  assert.equal(full.length, 218); // Initialization, 216 comparisons and completion.
   const firstWrite = filtered[1];
   assert.equal(firstWrite.state.D[0][2], 7);
   assert.deepEqual(firstWrite.writes, [['D', 0, 2], [key, 0, 2]]);
@@ -69,9 +69,12 @@ for (const key of ['N', 'M']) {
     if (s === t) assert.match(last.detail, /Tổng trọng số 0/);
     if (m.final.D[s][t] === Infinity) assert.match(last.detail, /Không có đường đi/);
   }
+  const extended = traceFrames(m, key, 0, 5);
+  assert.match(extended.at(-1).detail, /4 \+ 3 \+ 2 \+ 2 \+ 3 = 14/);
+  assert.deepEqual(extended.at(-1).route, [0,1,2,3,4,5]);
   const main = traceFrames(m, key, 0, 3);
   assert.match(main.at(-1).detail, /4 \+ 3 \+ 2 = 9/);
   if (key === 'N') assert.deepEqual(main.slice(1,-1).map(f => f.reads[0]), [['N',0,3],['N',1,3],['N',2,3]]);
   else assert.deepEqual(main.filter(f => f.entry).map(f => f.entry.depth), [0,1,2,3,2,3,1,2]);
 }
-console.log('PASS inline diagrams, Java input, 64 build comparisons, all 32 traces, matrix reads and recursive call order.');
+console.log('PASS inline diagrams, Java input, 216 build comparisons, all 72 traces, matrix reads and recursive call order.');
